@@ -28,7 +28,7 @@ import argparse
 import time
 import typing
 
-import pandas as pd
+# import pandas as pd
 import numpy as np
 import matplotlib as mpl
 mpl.use('Agg')
