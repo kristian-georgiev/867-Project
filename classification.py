@@ -109,7 +109,7 @@ def main():
             nn.BatchNorm2d(64, momentum=1, affine=True),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2, 2),
-            nn.Conv2d(64, 64, 3),
+                nn.Conv2d(64, 64, 3),
             nn.BatchNorm2d(64, momentum=1, affine=True),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2, 2),
@@ -132,6 +132,7 @@ def main():
         test_dict = {'db': db, 'net': net, 'device': device}
 
     log = []
+    weights_accross_training = [net.state_dict()]
     for epoch in range(100):
         train_dict['epoch'] = epoch 
         train_dict['log'] = log
@@ -141,6 +142,13 @@ def main():
         test(**test_dict)
         plot(log)
 
+        previous_weights = weights_accross_training[-1]
+        new_weights = net.state_dict()
+        gradient_update = {key: new_weights.get(key, 0) - previous_weights[key] for key in previous_weights.keys()}
+        weights_accross_training.append(gradient_update)
+
+    np.save(np.array(weights_accross_training), "/models/gradient_updates.npy")
+    torch.save(net.state_dict(), "/models/model_state_dict.pt")
 
 
 def plot(log):
