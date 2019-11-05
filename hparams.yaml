@@ -1,0 +1,13 @@
+default: &DEFAULT
+  dataset: omniglot # omniglot / miniimagenet / quickdraw
+  algorithm: maml # maml / reptile / anil
+  model: small # model architecture, specified in /models/models.py: small / medium / large / residual
+  optimizer: adam
+  n_way: 5
+  freeze: 2 # used for anil only, number of layers to freeze
+  meta_batch_size: 32 # number of tasks in training batch
+  k_support: 5 # k shot for support set
+  k_query: 15 # k shot for query set
+  seed: 121 # random seed
+  loss_plotting: false # whether to plot loss landscape
+  

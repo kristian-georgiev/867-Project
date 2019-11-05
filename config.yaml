@@ -1,0 +1,9 @@
+gpu: &DEFAULT
+  gpu_available: true
+  working_dir: .
+  parameters_file: hparams.yaml
+  loss_plots_dir: ./plots
+
+local: 
+  <<: *DEFAULT
+  gpu_available: false
