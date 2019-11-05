@@ -34,7 +34,10 @@ import higher
 from parse import parse
 from support.omniglot_loaders import OmniglotNShot
 import meta_ops
-
+import models
+import meta_learners
+import loss_plotter
+import dataloader
 
 # parse config
 config_choice = sys.argv[1].rstrip()
@@ -43,6 +46,30 @@ config = Munch(config)
 hparams_choice = config.parameters_choice
 
 # parse hyperparameters
-hparams = parse(config.parameters_file)[hparams_choice]
+hparams = Munch(parse(config.parameters_file)[hparams_choice])
 
+# set random seed
+torch.manual_seed(hparams.seed)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(hparams.seed)
+np.random.seed(hparams.seed)
+
+# init CPU / GPU
 device = torch.device("cuda:0" if torch.cuda.is_available() and config.gpu_available else "cpu")
+print(f"Device is {device}.")
+
+model = models.model(hparams.model)
+
+dataloader = dataloader.dataloader(hparams.dataset)
+
+meta_learner = meta_learners.meta_learner(hparams.meta_learner)
+
+if not hparams.loss_plotting:
+    meta_learner.train(dataloader, save_gradient_steps=False)
+
+else: # hparams.loss_plotting == True
+    weights_accross_training = meta_learner.train(dataloader, save_gradient_steps=True)
+    
+    directions = loss_plotter.pca_directions(weights_accross_training)
+    plot_filename = loss_plotter.plot_loss_landscape(directions, dataloader, model)
+    print(f"Saved plots in {config.loss_plots_dir}/{plot_filename}")

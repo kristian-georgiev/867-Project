@@ -1,6 +1,6 @@
 default: &DEFAULT
   dataset: omniglot # omniglot / miniimagenet / quickdraw
-  algorithm: maml # maml / reptile / anil
+  meta_learner: maml # maml / reptile / anil
   model: small # model architecture, specified in /models/models.py: small / medium / large / residual
   optimizer: adam
   n_way: 5
