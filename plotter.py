@@ -4,13 +4,19 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 plt.style.use('bmh')
 
+from sklearn.decomposition import PCA
+
 
 def pca_directions(weights_accross_training):
-    pass
+    # TODO: implement flatten()
+    flat_weight_tensor = flatten(weights_accross_training)
+    flat_weight_np = flat_weight_tensor.numpy()
+    pca = PCA(n_components=2)
+    pca.fit(flat_weight_np)
+    return pca.components_
 
 def plot_loss_landscape(directions, test_dataset, model):
     pass
-
 
 def plot_progress(log):
     # Generally you should pull your plotting code out of your training
@@ -31,3 +37,10 @@ def plot_progress(log):
     print(f'--- Plotting accuracy to {fname}')
     fig.savefig(fname)
     plt.close(fig)
+
+
+def flatten(weights_list):
+    for w in weights_list:
+        # flatten state_dict into tensor
+        pass
+    return weights_list

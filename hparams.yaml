@@ -14,7 +14,7 @@ default: &DEFAULT
   saving_gradient_steps: true # save gradient steps to get which directions to plot
   loss_plotting: false # whether to plot loss landscape
   plot_progress: true # whether to plot progress during training
-  modelpath: ./models/modelname.pickle # path to models folder
+  modelpath: ./models/modelname.pth # path to models folder
   
 pretrained:
   modelpath: ./models/modelname.pickle # path to model state_dict
