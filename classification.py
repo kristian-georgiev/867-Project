@@ -43,13 +43,14 @@ import torch.optim as optim
 import higher
 
 from support.omniglot_loaders import OmniglotNShot
+from support.quickdraw_loaders import QuickdrawNShot
 import meta_ops
 import pdb
 
 
 def main():
     argparser = argparse.ArgumentParser('Few Shot Learning')
-    argparser.add_argument('--dataset', type=str, help='omniglot/miniimagenet/etc.', default='omniglot')
+    argparser.add_argument('--dataset', type=str, help='omniglot/miniimagenet/etc.', default='quickdraw')
     argparser.add_argument('--metalearner', type=str, help='maml/reptile/anil/nil/etc.', default='maml')
     argparser.add_argument('--n_way', type=int, help='n way', default=5)
     argparser.add_argument('--freeze', type=int, help='freeze for anil', default=2)
@@ -82,13 +83,23 @@ def main():
             imgsz=28,
             device=device,
         )
+    elif args.dataset == 'quickdraw': 
+        db = QuickdrawNShot(
+            './support/data/QuickDrawData.pkl',
+            batchsz=args.task_num,
+            n_way=args.n_way,
+            k_shot=args.k_spt,
+            k_query=args.k_qry,
+            imgsz=28,
+            device=device,
+        )
 
     # Create a vanilla PyTorch neural network that will be
     # automatically monkey-patched by higher later.
     # Before higher, models could *not* be created like this
     # and the parameters needed to be manually updated and copied
     # for the updates.
-    if args.dataset == 'omniglot': 
+    if args.dataset in ['omniglot', 'quickdraw']: 
         net = nn.Sequential(
             nn.Conv2d(1, 64, 3),
             nn.BatchNorm2d(64, momentum=1, affine=True),
