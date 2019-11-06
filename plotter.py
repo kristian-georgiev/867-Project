@@ -1,21 +1,35 @@
+import torch
 import pandas as pd
+import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 plt.style.use('bmh')
-
+from collections import OrderedDict
 from sklearn.decomposition import PCA
 
 
 def pca_directions(weights_accross_training):
-    # TODO: implement flatten()
-    flat_weight_tensor = flatten(weights_accross_training)
-    flat_weight_np = flat_weight_tensor.numpy()
+    if isinstance(weights_accross_training[0], np.ndarray):
+        flat_weight_list = [flatten(weights) for weights in weights_accross_training]
+    else:
+        flat_weight_list = [flatten(weights).numpy() for weights in weights_accross_training]
+
+    print("Flattened weights.")
+
+    flat_weight_np = np.array(flat_weight_list)
+
+    print(flat_weight_np.shape)
+
     pca = PCA(n_components=2)
     pca.fit(flat_weight_np)
-    return pca.components_
+    dirs = pca.components_
 
-def plot_loss_landscape(directions, test_dataset, model):
+    unflattened_dirs = unflatten(dirs, weights_accross_training[0])
+
+    return unflattened_dirs
+
+def plot_loss_landscape(directions, test_dataset, model):   
     pass
 
 def plot_progress(log):
@@ -39,8 +53,25 @@ def plot_progress(log):
     plt.close(fig)
 
 
-def flatten(weights_list):
-    for w in weights_list:
-        # flatten state_dict into tensor
-        pass
-    return weights_list
+def flatten(weights_dict):
+    flat_weights = [weights_dict[t].reshape(-1) for t in weights_dict]
+    return torch.cat(flat_weights)
+
+def unflatten(dirs, weights_desired_shape):
+    assert (len(flatten(weights_desired_shape)) == len(dirs[0])),\
+         f"We need dimensions {len(dirs)} of dirs and \
+             {len(flatten(weights_desired_shape))} of state_dict to match up"
+
+    unflattened_dirs = []
+
+    for d in dirs:
+        unflattened_dir = OrderedDict()
+        
+        for w in weights_desired_shape:
+            l = len(weights_desired_shape[w].reshape(-1))
+            shape = weights_desired_shape[w].shape
+            unflattened_dir[w] = d[ :l].reshape(shape)
+            d = d[l: ]
+        unflattened_dirs.append(unflattened_dir)
+        
+    return unflattened_dirs

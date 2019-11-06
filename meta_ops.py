@@ -55,6 +55,7 @@ def train_maml(db, net, device, meta_opt, epoch, log):
         start_time = time.time()
         # Sample a batch of support and query images and labels.
         x_spt, y_spt, x_qry, y_qry = db.next()
+        print(f"In this batch, we have x_support {x_spt.shape}, y_support {y_spt.shape}, x_query {x_qry.shape}, y_query {y_qry.shape}.")
 
         task_num, setsz, c_, h, w = x_spt.size()
         querysz = x_qry.size(1)

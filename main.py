@@ -126,14 +126,25 @@ if not config.parameters_choice == "pretrained":
     print(net)
 
     # serialize model
+    np.save("./models/gradient_updates.npy", np.array(weights_accross_training))
     torch.save(net.state_dict(), hparams.modelpath)
-
 
 else: # config.parameters_choice == "pretrained"
     net = torch.load(hparams.modelpath)
+    weights_accross_training = np.load("./models/gradient_updates.npy", allow_pickle=True)
+    print("Loaded model and gradient_updates!")
 
 
 if hparams.loss_plotting:
+
+    # remove non-weight/bias elements from state dictionaries
+    # e.g. running averages go there as well, etc.
+    for i in range(len(weights_accross_training)):
+        weights_accross_training[i] = {weight_name:weights_accross_training[i][weight_name]\
+        for weight_name in weights_accross_training[i] \
+        if "weight" in weight_name or "bias" in weight_name}
+
     directions = plotter.pca_directions(weights_accross_training)
+    print(f"Got PCA directions!")
     plot_filename = plotter.plot_loss_landscape(directions, dataloader, model)
     print(f"Saved plots in {config.loss_plots_dir}/{plot_filename}")
