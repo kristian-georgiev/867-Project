@@ -53,6 +53,7 @@ def main():
     argparser.add_argument('--dataset', type=str, help='omniglot/miniimagenet/etc.', default='quickdraw')
     argparser.add_argument('--metalearner', type=str, help='maml/reptile/anil/nil/etc.', default='maml')
     argparser.add_argument('--n_way', type=int, help='n way', default=5)
+    argparser.add_argument('--n_epoch', type=int, help='num epochs', default=100)
     argparser.add_argument('--freeze', type=int, help='freeze for anil', default=2)
     argparser.add_argument(
         '--k_spt', type=int, help='k shot for support set', default=5)
@@ -132,26 +133,26 @@ def main():
         test_dict = {'db': db, 'net': net, 'device': device}
 
     log = []
-    weights_accross_training = [net.state_dict()]
-    for epoch in range(100):
+    weights_across_training = [net.state_dict()]
+    for epoch in range(args.n_epoch):
         train_dict['epoch'] = epoch 
         train_dict['log'] = log
         test_dict['epoch'] = epoch
         test_dict['log'] = log
         train(**train_dict)
         test(**test_dict)
-        plot(log)
+        plot(log, args)
 
-        previous_weights = weights_accross_training[-1]
+        previous_weights = weights_across_training[-1]
         new_weights = net.state_dict()
         gradient_update = {key: new_weights.get(key, 0) - previous_weights[key] for key in previous_weights.keys()}
-        weights_accross_training.append(gradient_update)
+        weights_across_training.append(gradient_update)
 
-    np.save(np.array(weights_accross_training), "/models/gradient_updates.npy")
-    torch.save(net.state_dict(), "/models/model_state_dict.pt")
+    np.save("./" + args.metalearner + "/" + args.dataset + "/gradient_updates.npy", np.array(weights_across_training))
+    torch.save(net.state_dict(), "./"  + args.metalearner + "/" + args.dataset + "/model_state_dict.pt")
 
 
-def plot(log):
+def plot(log, args):
     # Generally you should pull your plotting code out of your training
     # script but we are doing it here for brevity.
     df = pd.DataFrame(log)
@@ -163,10 +164,11 @@ def plot(log):
     ax.plot(test_df['epoch'], test_df['acc'], label='Test')
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Accuracy')
-    ax.set_ylim(70, 100)
+    ax.set_ylim(60, 100)
     fig.legend(ncol=2, loc='lower right')
     fig.tight_layout()
-    fname = 'maml-accs.png'
+    plt.title(args.metalearner + ' on ' + args.dataset)
+    fname = args.metalearner + '_' + args.dataset + '.png'
     print(f'--- Plotting accuracy to {fname}')
     fig.savefig(fname)
     plt.close(fig)
