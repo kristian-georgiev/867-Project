@@ -36,22 +36,33 @@ def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights
 
     loss_grid = []
 
-    for i in gridpoints:
+    for i, val_i in enumerate(gridpoints):
         loss_grid.append([])
-        for j in gridpoints:
-            L = loss_eval(i, j , loss, directions, test_dataset, architecture)
+        for j, val_j in enumerate(gridpoints):
+            L = loss_eval(val_i, val_j , loss, directions, test_dataset, architecture)
             loss_grid[i].append(L)
 
-    plt.countour(gridpoints, gridpoints, loss_grid)
+    fig, ax = plt.subplots()
+    C = ax.contour(gridpoints, gridpoints, loss_grid)
+    ax.clabel(C)
+    print("Got contour plot!")
 
     trajectory = []
     for weights in weights_over_time:
         projected_weights = project_onto(weights, directions)
         trajectory.append(projected_weights)
 
-    plt.plot(trajectory)
+    x_traj = [elt[0] for elt in trajectory]
+    y_traj = [elt[1] for elt in trajectory]
 
-    plt.savefig("./trajectory.png")
+    plt.scatter(x_traj, y_traj)
+    print(f"Trajectory is {trajectory}")
+
+    filename = "./trajectory.png"
+    ax.set_title("Trajectory over training.")
+    plt.savefig(filename)
+
+    return filename
 
 def plot_progress(log):
     # Generally you should pull your plotting code out of your training

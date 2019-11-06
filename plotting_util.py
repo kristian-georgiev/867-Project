@@ -34,22 +34,50 @@ def unflatten(dirs, weights_desired_shape):
     return unflattened_dirs
 
 def loss_eval(i, j , loss, directions, test_dataset, architecture):
-    # TODO: implement this f-n
-    weights = {key: i*directions[0][key] + j*directions[1][key] for key in directions[0].keys()}
-    old_state = architecture.state_dict()
+    """Evaluate loss on test set at the point given by i, j, directions
+    
+    Arguments:
+        i {float} -- coeff. for first direction, in [-1, 1]
+        j {float} -- coeff. for second direction, in [-1, 1]
+        loss {function} -- loss f-n to be evaluated
+        directions {list(OrderedDict)} -- list of two directions we got from PCA
+        test_dataset {tuple} -- tuple of (X, Y) loaded from dataloader
+        architecture {torch.Sequential} -- PyTorch net
+    
+    Returns:
+        float -- loss evaluated at 
+        architecture(weights = i * dir[0] + j * dir[1]) on test_dataset
+    """
+    weights = {key: i * directions[0][key] + j * directions[1][key] \
+        for key in directions[0].keys()}
 
-    new_state = {}
+    old_state = architecture.state_dict()
+    new_state = OrderedDict()
+
+    # update keys that are present in weights
+    # for context, net.state_dict() contains tensors that are
+    # neither weights, nor biases, and they are not present in the 
+    # weights ordered dictionary
     for key, old_val in old_state.items():
         if key in weights.keys():
-            new_state[key] = weights[key]
+            if isinstance(weights[key], torch.Tensor):
+                new_state[key] = weights[key]
+            else:
+                new_state[key] = torch.from_numpy(weights[key])
         else:
             new_state[key] = old_val
 
     architecture.load_state_dict(new_state)
+    architecture.eval()
 
-    X_test, Y_test = test_dataset
-    Y_pred = architecture.forward(X_test)
-    loss_val = loss(Y_pred, Y_test)
+    X, Y = test_dataset
+    x, y, z = X.shape[2:]
+    X = X.permute(2, 3, 4, 0, 1).reshape(x, y, z, -1).permute(3, 0, 1, 2)
+    Y = Y.reshape(-1)
+
+    Y_pred = architecture(X)
+    # print(f"Got {Y_pred} from architecture")
+    loss_val = loss(Y_pred, Y)
 
     return loss_val
     
@@ -71,14 +99,16 @@ def project_onto(weights, directions):
     flat_weights = flatten(weights)
 
     for dir in directions:
-        coeff = np.dot(flat_weights, dir) / np.linalg.norm(dir)
+        dir_pt = {key:torch.from_numpy(dir[key]) for key in dir}
+        flat_dir = flatten(dir_pt).numpy()
+        coeff = np.dot(flat_weights, flat_dir) / np.linalg.norm(flat_dir)
         projection_coeffs.append(coeff)
 
     return projection_coeffs
 
 
 def cumsum(ordered_dict_list):
-    cumsum_list = ordered_dict_list[0]
+    cumsum_list = [ordered_dict_list[0]]
     for elt in ordered_dict_list[1: ]:
         sum_so_far = cumsum_list[-1]
         new_elt = {state_name:sum_so_far[state_name] + elt[state_name]\

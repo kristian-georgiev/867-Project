@@ -105,8 +105,9 @@ if not config.parameters_choice == "pretrained":
     # train & test loop
     # -----------------
     log = []
-    weights_accross_training = [net.state_dict()]
+    updates_accross_training = [net.state_dict()]
 
+    print(f"Training for {hparams.num_epochs} epochs.")
     for epoch in range(hparams.num_epochs):
         train_dict['epoch'] = epoch 
         train_dict['log'] = log
@@ -117,18 +118,16 @@ if not config.parameters_choice == "pretrained":
         test(**test_dict)
 
         if hparams.saving_gradient_steps:
-            previous_weights = weights_accross_training[-1]
+            previous_weights = updates_accross_training[-1]
             new_weights = net.state_dict()
             gradient_update = {key: new_weights.get(key, 0) - previous_weights[key] for key in previous_weights.keys()}
-            weights_accross_training.append(gradient_update)
+            updates_accross_training.append(gradient_update)
 
         if hparams.plot_progress:
             plotter.plot_progress(log)
-
-    print(net)
-
+        
     # serialize model
-    np.save("./models/gradient_updates.npy", np.array(weights_accross_training))
+    np.save("./models/gradient_updates.npy", np.array(updates_accross_training))
     torch.save(net.state_dict(), hparams.modelpath)
 
 else: # config.parameters_choice == "pretrained"
@@ -160,7 +159,8 @@ if hparams.loss_plotting:
     dataloader = dataloader.dataloader(hparams)
 
     test_dataset = dataloader.next()
-    print(len(test_dataset))
+    _, __, X, Y = test_dataset # take only query dataset
+    test_dataset = (X, Y)
 
     # define loss
     loss = F.cross_entropy
@@ -169,7 +169,8 @@ if hparams.loss_plotting:
     weights_over_time = plotting_util.cumsum(updates_accross_training)
 
     # get directions from gradient updates only, without weights init
-    updates_accross_training = updates_accross_training[1: ]
+
+    # updates_accross_training = updates_accross_training[1: ]
     directions = plotter.pca_directions(updates_accross_training)
     print(f"Got PCA directions!")
 
