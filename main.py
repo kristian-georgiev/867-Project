@@ -130,8 +130,17 @@ if not config.parameters_choice == "pretrained":
     torch.save(net.state_dict(), hparams.modelpath)
 
 else: # config.parameters_choice == "pretrained"
-    net = torch.load(hparams.modelpath)
-    weights_accross_training = np.load("./models/gradient_updates.npy", allow_pickle=True)
+
+    # load model state dictionary
+    state_dict = torch.load(hparams.modelpath)
+
+    # init model
+    modelloader = models.modelloader(hparams.model)
+    net = modelloader(hparams)
+    net.load_state_dict(state_dict)
+
+    # load gradient updates
+    updates_accross_training = np.load("./models/gradient_updates.npy", allow_pickle=True)
     print("Loaded model and gradient_updates!")
 
 
@@ -139,12 +148,22 @@ if hparams.loss_plotting:
 
     # remove non-weight/bias elements from state dictionaries
     # e.g. running averages go there as well, etc.
-    for i in range(len(weights_accross_training)):
-        weights_accross_training[i] = {weight_name:weights_accross_training[i][weight_name]\
-        for weight_name in weights_accross_training[i] \
-        if "weight" in weight_name or "bias" in weight_name}
+    for i in range(len(updates_accross_training)):
+        updates_accross_training[i] = {state_name:updates_accross_training[i][state_name]\
+        for state_name in updates_accross_training[i] \
+        if "weight" in state_name or "bias" in state_name}
 
-    directions = plotter.pca_directions(weights_accross_training)
+    directions = plotter.pca_directions(updates_accross_training)
     print(f"Got PCA directions!")
-    plot_filename = plotter.plot_loss_landscape(directions, dataloader, model)
+
+    # init dataloader
+    dataloader = dataloader.dataloader(hparams)
+
+    test_dataset = dataloader.next()
+    print(len(test_dataset))
+
+    # define loss
+    loss = F.cross_entropy
+
+    plot_filename = plotter.plot_loss_landscape(directions, test_dataset, net, loss, hparams.plot_gridsize, weights_over_time)
     print(f"Saved plots in {config.loss_plots_dir}/{plot_filename}")

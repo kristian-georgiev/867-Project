@@ -46,9 +46,16 @@ def project_onto(weights, directions):
         we got from PCA
     
     Returns:
-        projected weights -- a list of the tuples of two coefficients 
+        projection coeffs -- tuple of two coefficients 
         of the projected weights
     """
-    # TODO: implement this f-n
-    return weights
+    projection_coeffs = []
+
+    flat_weights = flatten(weights)
+
+    for dir in directions:
+        coeff = np.dot(flat_weights, dir) / np.linalg.norm(dir)
+        projection_coeffs.append(coeff)
+
+    return projection_coeffs
 

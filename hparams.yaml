@@ -17,8 +17,10 @@ default: &DEFAULT
   modelpath: ./models/modelname.pt # path to models folder
   
 pretrained:
+  <<: *DEFAULT
   modelpath: ./models/modelname.pt # path to model state_dict
   gradientstepspath: ./models/gradientsteps.npy # path to numpy array of gradient steps
   dataset: omniglot
   seed: 121 # random seed
   loss_plotting: true # whether to plot loss landscape
+  plot_gridsize: 10 # number of points in plot meshgrid
