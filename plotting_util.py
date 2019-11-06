@@ -6,6 +6,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 plt.style.use('bmh')
 from collections import OrderedDict
+import torch.nn.functional as F
 from sklearn.decomposition import PCA
 
 
@@ -34,7 +35,23 @@ def unflatten(dirs, weights_desired_shape):
 
 def loss_eval(i, j , loss, directions, test_dataset, architecture):
     # TODO: implement this f-n
-    return 0
+    weights = {key: i*directions[0][key] + j*directions[1][key] for key in directions[0].keys()}
+    old_state = architecture.state_dict()
+
+    new_state = {}
+    for key, old_val in old_state.items():
+        if key in weights.keys():
+            new_state[key] = weights[key]
+        else:
+            new_state[key] = old_val
+
+    architecture.load_state_dict(new_state)
+
+    X_test, Y_test = test_dataset
+    Y_pred = architecture.forward(X_test)
+    loss_val = loss(Y_pred, Y_test)
+
+    return loss_val
     
 def project_onto(weights, directions):
     """Projects list of weights on list of
