@@ -59,9 +59,6 @@ class QuickDrawData(Dataset):
     def __len__(self):
         return len(self.data)
 
-data = QuickDrawData(load="/tmp/data/QuickDrawData.pkl")
-
-
 def find_classes(root_dir):
     retour = []
     for (root, dirs, files) in os.walk(root_dir):
@@ -100,7 +97,7 @@ class QuickdrawNShot:
         self.device = device
         
 
-        self.data = QuickDrawData(load="/tmp/data/QuickDrawData.pkl")
+        self.data = QuickDrawData(load=root)
         self.x_raw = self.data.data
         self.x = np.empty([345,20,1,28,28], dtype=int)
 
