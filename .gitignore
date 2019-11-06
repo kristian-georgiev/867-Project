@@ -1,3 +1,5 @@
 __pycache__/
 support/__pycache__/
 *.png
+.vscode/
+models/

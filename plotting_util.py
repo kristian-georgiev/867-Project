@@ -76,3 +76,13 @@ def project_onto(weights, directions):
 
     return projection_coeffs
 
+
+def cumsum(ordered_dict_list):
+    cumsum_list = ordered_dict_list[0]
+    for elt in ordered_dict_list[1: ]:
+        sum_so_far = cumsum_list[-1]
+        new_elt = {state_name:sum_so_far[state_name] + elt[state_name]\
+            for state_name in elt}
+        cumsum_list.append(new_elt)
+    
+    return cumsum_list

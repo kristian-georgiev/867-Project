@@ -51,7 +51,9 @@ from parse import parse
 import models
 import meta_learners
 import plotter
+import plotting_util
 import dataloader
+
 
 # parse config
 config_choice = sys.argv[1].rstrip()
@@ -153,8 +155,6 @@ if hparams.loss_plotting:
         for state_name in updates_accross_training[i] \
         if "weight" in state_name or "bias" in state_name}
 
-    directions = plotter.pca_directions(updates_accross_training)
-    print(f"Got PCA directions!")
 
     # init dataloader
     dataloader = dataloader.dataloader(hparams)
@@ -164,6 +164,15 @@ if hparams.loss_plotting:
 
     # define loss
     loss = F.cross_entropy
+
+    # get weights over time from gradient updates over time
+    weights_over_time = plotting_util.cumsum(updates_accross_training)
+
+    # get directions from gradient updates only, without weights init
+    updates_accross_training = updates_accross_training[1: ]
+    directions = plotter.pca_directions(updates_accross_training)
+    print(f"Got PCA directions!")
+
 
     plot_filename = plotter.plot_loss_landscape(directions, test_dataset, net, loss, hparams.plot_gridsize, weights_over_time)
     print(f"Saved plots in {config.loss_plots_dir}/{plot_filename}")
