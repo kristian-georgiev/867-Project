@@ -8,6 +8,8 @@ plt.style.use('bmh')
 from collections import OrderedDict
 from sklearn.decomposition import PCA
 
+from plotting_util import *
+
 
 def pca_directions(weights_accross_training):
     if isinstance(weights_accross_training[0], np.ndarray):
@@ -29,8 +31,27 @@ def pca_directions(weights_accross_training):
 
     return unflattened_dirs
 
-def plot_loss_landscape(directions, test_dataset, model):   
-    pass
+def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights_over_time):   
+    gridpoints = np.linspace(-1, 1, k)
+
+    loss_grid = []
+
+    for i in gridpoints:
+        loss_grid.append([])
+        for j in gridpoints:
+            L = loss_eval(i, j , loss, directions, test_dataset, architecture)
+            loss_grid[i].append(L)
+
+    plt.countour(gridpoints, gridpoints, loss_grid)
+
+    trajectory = []
+    for weights in weights_over_time:
+        projected_weights = project_onto(weights, directions)
+        trajectory.append(projected_weights)
+
+    plt.plot(trajectory)
+
+    plt.savefig("./trajectory.png")
 
 def plot_progress(log):
     # Generally you should pull your plotting code out of your training
@@ -53,25 +74,3 @@ def plot_progress(log):
     plt.close(fig)
 
 
-def flatten(weights_dict):
-    flat_weights = [weights_dict[t].reshape(-1) for t in weights_dict]
-    return torch.cat(flat_weights)
-
-def unflatten(dirs, weights_desired_shape):
-    assert (len(flatten(weights_desired_shape)) == len(dirs[0])),\
-         f"We need dimensions {len(dirs)} of dirs and \
-             {len(flatten(weights_desired_shape))} of state_dict to match up"
-
-    unflattened_dirs = []
-
-    for d in dirs:
-        unflattened_dir = OrderedDict()
-        
-        for w in weights_desired_shape:
-            l = len(weights_desired_shape[w].reshape(-1))
-            shape = weights_desired_shape[w].shape
-            unflattened_dir[w] = d[ :l].reshape(shape)
-            d = d[l: ]
-        unflattened_dirs.append(unflattened_dir)
-        
-    return unflattened_dirs
