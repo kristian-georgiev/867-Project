@@ -2,7 +2,6 @@ certifi==2019.9.11
 chardet==3.0.4
 cycler==0.10.0
 h5py==2.9.0
-higher==0.1.4
 idna==2.8
 kiwisolver==1.1.0
 matplotlib==3.1.1
