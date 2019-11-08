@@ -9,6 +9,7 @@ from collections import OrderedDict
 import torch.nn.functional as F
 from sklearn.decomposition import PCA
 
+import pdb
 
 def flatten(weights_dict):
     flat_weights = [weights_dict[t].reshape(-1) for t in weights_dict]
@@ -33,7 +34,7 @@ def unflatten(dirs, weights_desired_shape):
         
     return unflattened_dirs
 
-def loss_eval(i, j , loss, directions, test_dataset, architecture):
+def loss_eval(i, j , loss, directions, X, Y, architecture):
     """Evaluate loss on test set at the point given by i, j, directions
     
     Arguments:
@@ -69,17 +70,13 @@ def loss_eval(i, j , loss, directions, test_dataset, architecture):
 
     architecture.load_state_dict(new_state)
     architecture.eval()
-
-    X, Y = test_dataset
-    x, y, z = X.shape[2:]
-    X = X.permute(2, 3, 4, 0, 1).reshape(x, y, z, -1).permute(3, 0, 1, 2)
-    Y = Y.reshape(-1)
-
-    Y_pred = architecture(X)
+    
+    with torch.no_grad(): 
+        Y_pred = architecture(X)
     # print(f"Got {Y_pred} from architecture")
     loss_val = loss(Y_pred, Y)
 
-    return loss_val
+    return float(loss_val)
     
 def project_onto(weights, directions):
     """Projects list of weights on list of
@@ -96,11 +93,11 @@ def project_onto(weights, directions):
     """
     projection_coeffs = []
 
-    flat_weights = flatten(weights)
+    flat_weights = flatten(weights).cpu().numpy()
 
     for dir in directions:
         dir_pt = {key:torch.from_numpy(dir[key]) for key in dir}
-        flat_dir = flatten(dir_pt).numpy()
+        flat_dir = flatten(dir_pt).cpu().numpy()
         coeff = np.dot(flat_weights, flat_dir) / np.linalg.norm(flat_dir)
         projection_coeffs.append(coeff)
 

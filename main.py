@@ -53,6 +53,7 @@ import meta_learners
 import plotter
 import plotting_util
 import dataloader
+import pdb
 
 
 # parse config
@@ -174,6 +175,5 @@ if hparams.loss_plotting:
     directions = plotter.pca_directions(updates_accross_training)
     print(f"Got PCA directions!")
 
-
-    plot_filename = plotter.plot_loss_landscape(directions, test_dataset, net, loss, hparams.plot_gridsize, weights_over_time)
+    plot_filename = plotter.plot_loss_landscape(directions, test_dataset, net, loss, hparams.plot_gridsize, weights_over_time, config.loss_plots_dir)
     print(f"Saved plots in {config.loss_plots_dir}/{plot_filename}")
