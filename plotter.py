@@ -10,12 +10,13 @@ from sklearn.decomposition import PCA
 
 from plotting_util import *
 
+import pdb
 
 def pca_directions(weights_accross_training):
     if isinstance(weights_accross_training[0], np.ndarray):
         flat_weight_list = [flatten(weights) for weights in weights_accross_training]
     else:
-        flat_weight_list = [flatten(weights).numpy() for weights in weights_accross_training]
+        flat_weight_list = [flatten(weights).cpu().numpy() for weights in weights_accross_training]
 
     print("Flattened weights.")
 
@@ -32,8 +33,16 @@ def pca_directions(weights_accross_training):
     return unflattened_dirs
 
 def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights_over_time):   
-    gridpoints = np.linspace(-1, 1, k)
+    k = 2
+    # TODO: remove this 
+    final_weights = weights_over_time[-1]
+    # Does the rescaling
+    for i in range(len(directions)): 
+        for d, w in zip(directions[i].items(), final_weights.items()): 
+            d[1] = d[1] * (np.linalg.norm(w[1].cpu().numpy()) / (np.linalg.norm(d[1]) + 1e-10))
+            print(d[1])
 
+    gridpoints = np.linspace(-1, 1, k)
     loss_grid = []
 
     for i, val_i in enumerate(gridpoints):
@@ -58,8 +67,9 @@ def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights
     plt.scatter(x_traj, y_traj)
     print(f"Trajectory is {trajectory}")
 
-    filename = "./trajectory.png"
+    filename = "trajectory.png"
     ax.set_title("Trajectory over training.")
+    plt.show()
     plt.savefig(filename)
 
     return filename
