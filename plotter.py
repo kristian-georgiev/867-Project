@@ -21,11 +21,13 @@ def pca_directions(weights_accross_training):
     print("Flattened weights.")
 
     flat_weight_np = np.array(flat_weight_list)
+    final_weights = np.sum(flat_weight_np, axis=0)
+    gradient_updates = flat_weight_np[2:] # remove init and 0 vector
 
-    print(flat_weight_np.shape)
+    pca_input = np.vstack((gradient_updates, final_weights))
 
     pca = PCA(n_components=2)
-    pca.fit(flat_weight_np)
+    pca.fit(pca_input)
     dirs = pca.components_
 
     unflattened_dirs = unflatten(dirs, weights_accross_training[0])
@@ -87,12 +89,7 @@ def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights
     plt.scatter(x_traj, y_traj)
     print(f"Trajectory is {trajectory}")
 
-
-
-
-
     # plt.scatter(x_traj, y_traj)
-
 
     filename = "trajectory.png"
     ax.set_title("Trajectory over training.")

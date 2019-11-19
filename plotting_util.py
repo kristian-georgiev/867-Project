@@ -78,7 +78,7 @@ def loss_eval(i, j , loss, directions, X, Y, architecture):
 
     return float(loss_val)
     
-def project_onto(weights, directions):
+def project_onto(weights, directions, flat=False, on_gpu=True):
     """Projects list of weights on list of
     orthogonal directions
     
@@ -93,7 +93,13 @@ def project_onto(weights, directions):
     """
     projection_coeffs = []
 
-    flat_weights = flatten(weights).cpu().numpy()
+    if not flat:
+        flat_weights = flatten(weights)
+    else:
+        flat_weights = weights
+
+    if on_gpu:
+        flat_weights = flat_weights.cpu().numpy()
 
     for dir in directions:
         dir_pt = {key:torch.from_numpy(dir[key]) for key in dir}
