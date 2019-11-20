@@ -34,12 +34,13 @@ def unflatten(dirs, weights_desired_shape):
         
     return unflattened_dirs
 
-def loss_eval(i, j , loss, directions, X, Y, architecture):
+def loss_eval(i, j , theta_star, loss, directions, X, Y, architecture):
     """Evaluate loss on test set at the point given by i, j, directions
     
     Arguments:
         i {float} -- coeff. for first direction, in [-1, 1]
         j {float} -- coeff. for second direction, in [-1, 1]
+        theta_star -- offset of the affine subspace spanned by the directions
         loss {function} -- loss f-n to be evaluated
         directions {list(OrderedDict)} -- list of two directions we got from PCA
         test_dataset {tuple} -- tuple of (X, Y) loaded from dataloader
@@ -49,7 +50,7 @@ def loss_eval(i, j , loss, directions, X, Y, architecture):
         float -- loss evaluated at 
         architecture(weights = i * dir[0] + j * dir[1]) on test_dataset
     """
-    weights = {key: i * directions[0][key] + j * directions[1][key] \
+    weights = {key: theta_star[key].numpy() + i * directions[0][key] + j * directions[1][key] \
         for key in directions[0].keys()}
 
     old_state = architecture.state_dict()

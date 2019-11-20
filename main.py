@@ -167,12 +167,12 @@ if hparams.loss_plotting:
     loss = F.cross_entropy
 
     # get weights over time from gradient updates over time
-    weights_over_time = plotting_util.cumsum(updates_accross_training)
+    weights_over_time = plotting_util.cumsum(updates_accross_training)[1:]
 
     # get directions from gradient updates only, without weights init
 
     # updates_accross_training = updates_accross_training[1: ]
-    directions = plotter.pca_directions(updates_accross_training)
+    directions = plotter.pca_directions(weights_over_time)
     print(f"Got PCA directions!")
 
     plot_filename = plotter.plot_loss_landscape(directions, test_dataset, net, loss, hparams.plot_gridsize, weights_over_time, config.loss_plots_dir)

@@ -21,13 +21,9 @@ def pca_directions(weights_accross_training):
     print("Flattened weights.")
 
     flat_weight_np = np.array(flat_weight_list)
-    final_weights = np.sum(flat_weight_np, axis=0)
-    gradient_updates = flat_weight_np[2:] # remove init and 0 vector
-
-    pca_input = np.vstack((gradient_updates, final_weights))
 
     pca = PCA(n_components=2)
-    pca.fit(pca_input)
+    pca.fit(flat_weight_np)
     dirs = pca.components_
 
     unflattened_dirs = unflatten(dirs, weights_accross_training[0])
@@ -35,7 +31,7 @@ def pca_directions(weights_accross_training):
     return unflattened_dirs
 
 def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights_over_time, plot_dir):   
-    final_weights = weights_over_time[-50]
+    # final_weights = weights_over_time[-50]
 
     # does rescaling
     # for i in range(len(directions)):
@@ -63,10 +59,10 @@ def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights
 
     min_x = min(x_traj)
     max_x = max(x_traj)
-    scale_x = abs(min_x - max_x) * 0.5
+    scale_x = abs(min_x - max_x) * 0.1
     min_y = min(y_traj)
     max_y = max(y_traj)
-    scale_y = abs(min_y - max_y) * 0.5
+    scale_y = abs(min_y - max_y) * 0.1
     print(min_x, max_x, min_y, max_y)
 
     grid_x = np.linspace(min_x - scale_x, max_x + scale_x, k)
@@ -76,11 +72,17 @@ def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights
     gridpoints_y = []
     for p in grid_y: 
         gridpoints_y.extend([p] * k)
-
+        
     def wrapper(val_i, val_j): 
-        return loss_eval(val_i, val_j , loss, directions, X, Y, architecture)
+        return loss_eval(val_i, val_j, theta_star, loss, directions, X, Y, architecture)
+
+    theta_star = weights_over_time[-1] # final weights
+
     loss_grid = map(wrapper, gridpoints_y, gridpoints_x)
-    loss_grid = np.reshape(np.array(list(loss_grid)), (k,k))
+
+    print(loss_grid)
+
+    loss_grid = np.reshape(np.array(list(loss_grid)), (k, k))
 
     print(loss_grid)
     C = ax.contourf(grid_x, grid_y, loss_grid)
