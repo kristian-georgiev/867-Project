@@ -67,6 +67,7 @@ def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights
     min_y = min(y_traj)
     max_y = max(y_traj)
     scale_y = abs(min_y - max_y) * 0.5
+    print(min_x, max_x, min_y, max_y)
 
     grid_x = np.linspace(min_x - scale_x, max_x + scale_x, k)
     gridpoints_x = grid_x.tolist() * k
@@ -82,14 +83,15 @@ def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights
     loss_grid = np.reshape(np.array(list(loss_grid)), (k,k))
 
     print(loss_grid)
-    C = ax.contour(grid_x, grid_y, loss_grid)
+    C = ax.contourf(grid_x, grid_y, loss_grid)
     ax.clabel(C)
     print("Got contour plot!")
 
     plt.scatter(x_traj, y_traj)
     print(f"Trajectory is {trajectory}")
 
-    # plt.scatter(x_traj, y_traj)
+    plt.scatter(x_traj[-1], y_traj[-1], marker='o', c='white')
+    plt.plot(x_traj, y_traj)
 
     filename = "trajectory.png"
     ax.set_title("Trajectory over training.")
