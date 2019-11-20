@@ -8,7 +8,7 @@ To run this code, you need to install the [higher](https://github.com/facebookre
 - Clone this repository.
 - Install `higher` with 
     ```
-    git clone git@github.com:facebookresearch/higher.git
+    git clone https://github.com/facebookresearch/higher.git
     cd higher
     pip install .
     ```
