@@ -13,6 +13,7 @@ from plotting_util import *
 import pdb
 
 def pca_directions(weights_accross_training):
+    weights_accross_training = cumsum(weights_accross_training)
     if isinstance(weights_accross_training[0], np.ndarray):
         flat_weight_list = [flatten(weights) for weights in weights_accross_training]
     else:
@@ -21,6 +22,7 @@ def pca_directions(weights_accross_training):
     print("Flattened weights.")
 
     flat_weight_np = np.array(flat_weight_list)
+
 
     pca = PCA(n_components=2)
     pca.fit(flat_weight_np)
@@ -50,6 +52,7 @@ def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights
     for weights in weights_over_time:
         projected_weights = project_onto(weights, directions)
         trajectory.append(projected_weights)
+    trajectory = trajectory[1:]
 
     fig, ax = plt.subplots()
 

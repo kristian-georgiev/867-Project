@@ -115,8 +115,11 @@ def cumsum(ordered_dict_list):
     cumsum_list = [ordered_dict_list[0]]
     for elt in ordered_dict_list[1: ]:
         sum_so_far = cumsum_list[-1]
-        new_elt = {state_name:sum_so_far[state_name] + elt[state_name]\
+        new_elt = {state_name:sum_so_far[state_name] + elt[state_name] \
             for state_name in elt}
         cumsum_list.append(new_elt)
-    
-    return cumsum_list
+    for i in range(len(cumsum_list)): 
+        for key in cumsum_list[i].keys(): 
+            cumsum_list[i][key] -= cumsum_list[-1][key]
+
+    return cumsum_list[:-1]
