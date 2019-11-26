@@ -128,7 +128,7 @@ if not config.parameters_choice == "pretrained":
             plotter.plot_progress(log)
         
     # serialize model
-    np.save("./models/gradient_updates.npy", np.array(updates_accross_training))
+    np.save(hparams.gradientstepspath, np.array(updates_accross_training))
     torch.save(net.state_dict(), hparams.modelpath)
 
 else: # config.parameters_choice == "pretrained"
@@ -142,7 +142,9 @@ else: # config.parameters_choice == "pretrained"
     net.load_state_dict(state_dict)
 
     # load gradient updates
-    updates_accross_training = np.load("./models/gradient_updates.npy", allow_pickle=True)
+    updates_accross_training = np.load(hparams.gradientstepspath, allow_pickle=True)
+    # updates_accross_training = updates_accross_training[-10:]
+    print(updates_accross_training.shape)
     print("Loaded model and gradient_updates!")
 
 
@@ -159,12 +161,17 @@ if hparams.loss_plotting:
     # init dataloader
     dataloader = dataloader.dataloader(hparams)
 
-    test_dataset = dataloader.next()
+    test_dataset = dataloader.next(mode='train')
     _, __, X, Y = test_dataset # take only query dataset
     test_dataset = (X, Y)
 
     # define loss
     loss = F.cross_entropy
+
+    net.eval()
+    with torch.no_grad(): 
+        Y_pred = net(X[0])
+    print("loss from sanity check is:", loss(Y_pred, Y[0]))
 
     # get weights over time from gradient updates over time
     weights_over_time = plotting_util.cumsum(updates_accross_training)[1:]

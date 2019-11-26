@@ -50,8 +50,11 @@ def loss_eval(i, j , theta_star, loss, directions, X, Y, architecture):
         float -- loss evaluated at 
         architecture(weights = i * dir[0] + j * dir[1]) on test_dataset
     """
-    weights = {key: theta_star[key].numpy() + i * directions[0][key] + j * directions[1][key] \
-        for key in directions[0].keys()}
+    # weights = {key: theta_star[key].cpu().numpy() + i * directions[0][key] + j * directions[1][key] \
+    #     for key in directions[0].keys()}
+    # weights = {key: theta_star[key].cpu().numpy() \
+    #     for key in directions[0].keys()}
+    weights = theta_star
 
     old_state = architecture.state_dict()
     new_state = OrderedDict()
@@ -118,8 +121,9 @@ def cumsum(ordered_dict_list):
         new_elt = {state_name:sum_so_far[state_name] + elt[state_name] \
             for state_name in elt}
         cumsum_list.append(new_elt)
-    for i in range(len(cumsum_list)): 
-        for key in cumsum_list[i].keys(): 
-            cumsum_list[i][key] -= cumsum_list[-1][key]
+    # for i in range(len(cumsum_list)): 
+    #     for key in cumsum_list[i].keys(): 
+    #         cumsum_list[i][key] -= cumsum_list[-1][key]
 
+    # return cumsum_list[:-1]
     return cumsum_list[:-1]

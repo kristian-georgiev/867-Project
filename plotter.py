@@ -33,20 +33,26 @@ def pca_directions(weights_accross_training):
     return unflattened_dirs
 
 def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights_over_time, plot_dir):   
-    # final_weights = weights_over_time[-50]
 
     # does rescaling
-    # for i in range(len(directions)):
-    #     for key, old_val in final_weights.items():
-    #         if key in final_weights.keys():
-    #             if isinstance(final_weights[key], torch.Tensor):
-    #                 directions[i][key] *= (np.linalg.norm(final_weights[key].cpu().numpy()) / (np.linalg.norm(directions[i][key]) + 1e-10))
+    for i in range(len(directions)):
+        for key, old_val in weights_over_time[-1].items():
+            if key in weights_over_time[-1].keys():
+                if isinstance(weights_over_time[-1][key], torch.Tensor):
+                    directions[i][key] *= (np.linalg.norm(weights_over_time[-1][key].cpu().numpy())\
+                     / (np.linalg.norm(directions[i][key]) + 1e-10))
 
     # constructs the test dataset
     X, Y = test_dataset
-    x, y, z = X.shape[2:]
-    X = X.permute(2, 3, 4, 0, 1).reshape(x, y, z, -1).permute(3, 0, 1, 2)
-    Y = Y.reshape(-1)
+    print(X.shape, Y.shape)
+    X = X[2]
+    Y = Y[2]
+    # X = X[20,10,:,:,:]
+    # Y = Y[20,:]
+    # print(X.shape, Y.shape)
+    # x, y, z = X.shape[2:]
+    # X = X.permute(2, 3, 4, 0, 1).reshape(x, y, z, -1).permute(3, 0, 1, 2)
+    # Y = Y.reshape(-1)
 
     trajectory = []
     for weights in weights_over_time:
@@ -66,7 +72,6 @@ def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights
     min_y = min(y_traj)
     max_y = max(y_traj)
     scale_y = abs(min_y - max_y) * 0.1
-    print(min_x, max_x, min_y, max_y)
 
     grid_x = np.linspace(min_x - scale_x, max_x + scale_x, k)
     gridpoints_x = grid_x.tolist() * k
@@ -75,28 +80,30 @@ def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights
     gridpoints_y = []
     for p in grid_y: 
         gridpoints_y.extend([p] * k)
-        
-    def wrapper(val_i, val_j): 
-        return loss_eval(val_i, val_j, theta_star, loss, directions, X, Y, architecture)
-
+    
     theta_star = weights_over_time[-1] # final weights
 
-    loss_grid = map(wrapper, gridpoints_y, gridpoints_x)
+    # def wrapper(val_i, val_j): 
+    #     return loss_eval(val_i, val_j, theta_star, loss, directions, X, Y, architecture)
+
+    loss_grid = np.empty((k, k))
+    for i in range(k):
+        for j in range(k): 
+            loss_grid[i,j] = loss_eval(grid_y[i], grid_x[j], theta_star, loss, directions, X, Y, architecture)
+
+    # loss_grid = map(wrapper, gridpoints_y, gridpoints_x)
+    # loss_grid = np.reshape(np.array(list(loss_grid)), (k, k))
 
     print(loss_grid)
-
-    loss_grid = np.reshape(np.array(list(loss_grid)), (k, k))
-
-    print(loss_grid)
-    C = ax.contourf(grid_x, grid_y, loss_grid)
-    ax.clabel(C)
+    C = ax.contourf(grid_x, grid_y, loss_grid, levels=20, cmap=plt.cm.coolwarm)
+    cbar = fig.colorbar(C)
     print("Got contour plot!")
 
-    plt.scatter(x_traj, y_traj)
-    print(f"Trajectory is {trajectory}")
-
-    plt.scatter(x_traj[-1], y_traj[-1], marker='o', c='white')
-    plt.plot(x_traj, y_traj)
+    # plots the trajectory
+    # plt.scatter(x_traj, y_traj)
+    plt.plot(x_traj, y_traj, c='black', lw='3')
+    plt.scatter(x_traj[-1], y_traj[-1], marker='X', c='white', s=160)
+    
 
     filename = "trajectory.png"
     ax.set_title("Trajectory over training.")
