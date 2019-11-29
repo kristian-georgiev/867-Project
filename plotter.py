@@ -13,40 +13,48 @@ from plotting_util import *
 import pdb
 
 def pca_directions(weights_accross_training):
-    weights_accross_training = cumsum(weights_accross_training)
-    if isinstance(weights_accross_training[0], np.ndarray):
-        flat_weight_list = [flatten(weights) for weights in weights_accross_training]
-    else:
-        flat_weight_list = [flatten(weights).cpu().numpy() for weights in weights_accross_training]
-
-    print("Flattened weights.")
-
-    flat_weight_np = np.array(flat_weight_list)
-
-
     pca = PCA(n_components=2)
-    pca.fit(flat_weight_np)
+    last_w = weights_accross_training[-1]
+    # pca.fit(weights_accross_training[0:len(weights_accross_training) - 1])
+    pca.fit(weights_accross_training - last_w)
     dirs = pca.components_
 
-    unflattened_dirs = unflatten(dirs, weights_accross_training[0])
+    return dirs
 
-    return unflattened_dirs
+def plot_loss_landscape(directions, 
+                        test_dataset, 
+                        architecture, 
+                        loss, 
+                        k, 
+                        weights_over_time, 
+                        shapes, 
+                        state_dict_template,
+                        plot_dir):   
 
-def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights_over_time, plot_dir):   
+    # # does rescaling
+    # for i in range(len(directions)):
+    #     for key, old_val in weights_over_time[-1].items():
+    #         if key in weights_over_time[-1].keys():
+    #             if isinstance(weights_over_time[-1][key], torch.Tensor):
+    #                 directions[i][key] *= (np.linalg.norm(weights_over_time[-1][key].cpu().numpy())\
+    #                  / (np.linalg.norm(directions[i][key]) + 1e-10))
 
-    # does rescaling
+    # rescaling
+    dirs_norms = [get_rescaling_factors(d, shapes) for d in directions]
+    last_weights_norm = get_rescaling_factors(weights_over_time[-1], shapes)
     for i in range(len(directions)):
-        for key, old_val in weights_over_time[-1].items():
-            if key in weights_over_time[-1].keys():
-                if isinstance(weights_over_time[-1][key], torch.Tensor):
-                    directions[i][key] *= (np.linalg.norm(weights_over_time[-1][key].cpu().numpy())\
-                     / (np.linalg.norm(directions[i][key]) + 1e-10))
+        m = list(np.array(last_weights_norm) / np.array(dirs_norms[i]))
+        directions[i] = multiply_filterwise(directions[i], shapes, m)
 
+
+    print("^^^^^^^^^^^^^^^^")
+    print(directions[:,0:5])
+    print("Rescaled directions!")
     # constructs the test dataset
     X, Y = test_dataset
     print(X.shape, Y.shape)
-    X = X[2]
-    Y = Y[2]
+    X = X[0]
+    Y = Y[0]
     # X = X[20,10,:,:,:]
     # Y = Y[20,:]
     # print(X.shape, Y.shape)
@@ -55,8 +63,10 @@ def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights
     # Y = Y.reshape(-1)
 
     trajectory = []
+    offset = weights_over_time[-1]
+
     for weights in weights_over_time:
-        projected_weights = project_onto(weights, directions)
+        projected_weights = project_onto(weights, directions, offset)
         trajectory.append(projected_weights)
     trajectory = trajectory[1:]
 
@@ -68,36 +78,68 @@ def plot_loss_landscape(directions, test_dataset, architecture, loss, k, weights
 
     min_x = min(x_traj)
     max_x = max(x_traj)
-    scale_x = abs(min_x - max_x) * 0.1
+    scale_x = (max_x - min_x) * 0.1
     min_y = min(y_traj)
     max_y = max(y_traj)
-    scale_y = abs(min_y - max_y) * 0.1
+    scale_y = (max_y - min_y) * 0.1
+    print(f"X MIN AND MAX ARE {min_x}, {max_x}")
+    print(f"Y MIN AND MAX ARE {min_y}, {max_y}")
 
     grid_x = np.linspace(min_x - scale_x, max_x + scale_x, k)
-    gridpoints_x = grid_x.tolist() * k
+    # print(grid_x)
+    # grid_x = np.append(grid_x, x_traj)
+    # print(grid_x)
+    # print("above are grid_x old and new size!!!!")
+    # gridpoints_x = grid_x.tolist() * k
+    # print(f"There are {len(gridpoints_x)} X gridpoints and k is {k}.")
 
     grid_y = np.linspace(min_y - scale_y, max_y + scale_y, k)
-    gridpoints_y = []
-    for p in grid_y: 
-        gridpoints_y.extend([p] * k)
+    # grid_y = np.append(grid_y, y_traj)
     
-    theta_star = weights_over_time[-1] # final weights
-
-    # def wrapper(val_i, val_j): 
-    #     return loss_eval(val_i, val_j, theta_star, loss, directions, X, Y, architecture)
+    # gridpoints_y = []
+    # for p in grid_y: 
+    #     gridpoints_y.extend([p] * k)
+    
+    k = len(grid_x)
 
     loss_grid = np.empty((k, k))
     for i in range(k):
         for j in range(k): 
-            loss_grid[i,j] = loss_eval(grid_y[i], grid_x[j], theta_star, loss, directions, X, Y, architecture)
+            loss_grid[i, j] = loss_eval(grid_x[j],
+                                        grid_y[i],
+                                        offset,
+                                        loss,
+                                        directions,
+                                        X, Y,
+                                        architecture,
+                                        shapes,
+                                        state_dict_template)
+            # print(f"i {grid_x[i]}, \
+            # j {grid_y[j]}, loss {loss_grid[i, j]}")
 
-    # loss_grid = map(wrapper, gridpoints_y, gridpoints_x)
-    # loss_grid = np.reshape(np.array(list(loss_grid)), (k, k))
+    # print(grid_x)
+    # print(grid_y)
+    # print(loss_grid)
 
-    print(loss_grid)
-    C = ax.contourf(grid_x, grid_y, loss_grid, levels=20, cmap=plt.cm.coolwarm)
+    print("END LOSS IS:")
+    print(loss_eval(0, 0, offset, loss, directions, X, Y, architecture, shapes, state_dict_template))
+
+    print("SLIGHT PERTUBATION OF IT IS:")
+    print(loss_eval(0.01, 0.01, offset, loss, directions, X, Y, architecture, shapes, state_dict_template))
+
+
+    print("SWING OF IT IS:")
+    print(loss_eval(-0.09, 0.0025, offset, loss, directions, X, Y, architecture, shapes, state_dict_template))
+
+
+    gx, gy = np.meshgrid(grid_x, grid_y)
+    C = ax.contourf(gx, gy, loss_grid)# , levels=5) #, cmap=plt.cm.coolwarm)
     cbar = fig.colorbar(C)
     print("Got contour plot!")
+    print("LOSS GRID IS:")
+    print(loss_grid)
+    print("MESHGRID IS:")
+    # print(gx, gy)
 
     # plots the trajectory
     # plt.scatter(x_traj, y_traj)

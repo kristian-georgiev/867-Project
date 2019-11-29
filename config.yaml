@@ -2,7 +2,7 @@ default: &DEFAULT
   gpu_available: true
   working_dir: .
   parameters_file: hparams.yaml
-  parameters_choice: pretrained # enumerated in parameters file
+  parameters_choice: default # enumerated in parameters file
   loss_plots_dir: ./plots
 
 local: 

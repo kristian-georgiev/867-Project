@@ -1,10 +1,10 @@
 default: &DEFAULT
   dataset: omniglot # omniglot / miniimagenet / quickdraw
   meta_learner: maml # maml / reptile / anil
-  model: small # model architecture, specified in /models/models.py: small / medium / large / residual
+  model: small_no_batch_norm # model architecture, specified in /models/models.py
   optimizer: adam
   learning_rate: 1e-3
-  num_epochs: 1
+  num_epochs: 4
   n_way: 5
   freeze: 2 # used for anil only, number of layers to freeze
   meta_batch_size: 32 # number of tasks in training batch
@@ -12,15 +12,15 @@ default: &DEFAULT
   k_query: 15 # k shot for query set
   seed: 121 # random seed
   saving_gradient_steps: true # save gradient steps to get which directions to plot
-  loss_plotting: false # whether to plot loss landscape
+  loss_plotting: true # whether to plot loss landscape
   plot_progress: true # whether to plot progress during training
-  modelpath: ./models/modelname.pt # path to models folder
-  
+  modelpath: ./models/maml/omniglot/small_no_batch_norm/modelname.pt # path to model state_dict
+  gradientstepspath: ./models/maml/omniglot/small_no_batch_norm/gradient_updates.npy # path to numpy array of gradient steps
+  plot_gridsize: 15 # number of points in plot meshgrid
+
 pretrained:
   <<: *DEFAULT
-  modelpath: ./models/modelname.pt # path to model state_dict
-  gradientstepspath: ./models/gradientsteps.npy # path to numpy array of gradient steps
   dataset: omniglot
   seed: 121 # random seed
   loss_plotting: true # whether to plot loss landscape
-  plot_gridsize: 10 # number of points in plot meshgrid
+  plot_gridsize: 5 # number of points in plot meshgrid
