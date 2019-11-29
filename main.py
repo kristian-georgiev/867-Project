@@ -45,6 +45,7 @@ from torch import nn
 import torch.nn.functional as F
 
 import higher
+import copy
 
 # local imports
 from parse import parse
@@ -106,7 +107,7 @@ if not config.parameters_choice == "pretrained":
     # train & test loop
     # -----------------
     log = []
-    updates_accross_training = [net.state_dict()]
+    weights_over_time = [copy.deepcopy(net.state_dict())]
     # print("~~~~INITIAL UPDATES ACCROSS TRAINING ARE~~~~~")
     # print(np.array(updates_accross_training))
     # print("~~~~~~~~~~~~~~~")
@@ -128,10 +129,10 @@ if not config.parameters_choice == "pretrained":
             # print("state dict is", net.state_dict())
             # print("net params are", list(net.parameters()))
             # print("--------------------------")
-            previous_weights = updates_accross_training[-1]
-            new_weights = net.state_dict()
-            gradient_update = {key: new_weights.get(key, 0) - previous_weights[key] for key in previous_weights.keys()}
-            updates_accross_training.append(gradient_update)
+            # previous_weights = updates_accross_training[-1]
+            # new_weights = net.state_dict()
+            # gradient_update = {key: new_weights.get(key, 0) - previous_weights[key] for key in previous_weights.keys()}
+            weights_over_time.append(copy.deepcopy(net.state_dict()))
 
             # print("~~~~~~UPDATES ACCROSS TRAINING~~~~~~~")
             # print(np.array(updates_accross_training))
@@ -139,11 +140,15 @@ if not config.parameters_choice == "pretrained":
 
         if hparams.plot_progress:
             plotter.plot_progress(log)
-        
+    np.savetxt(log, "log.txt")
     # serialize model
-    np.save(hparams.gradientstepspath, np.array(updates_accross_training))
+    np.save(hparams.gradientstepspath, np.array(weights_over_time))
     torch.save(net.state_dict(), hparams.modelpath)
-    state_dict = net.state_dict()
+    # state_dict = net.state_dict()
+
+    # load model state dictionary
+    state_dict = torch.load(hparams.modelpath)
+
 
 else: # config.parameters_choice == "pretrained"
 
@@ -157,7 +162,7 @@ else: # config.parameters_choice == "pretrained"
     # print(net.state_dict()["0.weight"][0])
 
     # load gradient updates
-    updates_accross_training = np.load(hparams.gradientstepspath, allow_pickle=True)
+    weights_over_time = np.load(hparams.gradientstepspath, allow_pickle=True)
     # print(updates_accross_training.shape)
     print("Loaded model and gradient updates!")
 
@@ -190,29 +195,22 @@ if hparams.loss_plotting:
     print("loss from sanity check is:", loss(Y_pred, Y[0]))
 
 
-    gradient_updates = plotting_util.state_dicts_list_to_numpy_array(updates_accross_training)    
+    Ws = plotting_util.state_dicts_list_to_numpy_array(weights_over_time)
+    index_weights_to_take = len(Ws) - hparams.last_n_traj_points - 1
+    Ws = Ws[index_weights_to_take:,:]
+    print(f"Length of trajectory is {len(Ws)}")
 
-    print("=====================GRADIENT UPDATES ARE===========")
-    print(gradient_updates)
-    print("========================================")
-    print("========================================")
-    print("========================================")
-    # print(gradient_updates[:, :3])
+    weight_shapes = plotting_util.get_shapes_indices(weights_over_time[0])
+    state_dict_template = weights_over_time[0]
 
-    # get weights over time from gradient updates over time
-    weights_over_time = np.cumsum(gradient_updates, axis=0)[1:]
-    weight_shapes = plotting_util.get_shapes_indices(updates_accross_training[0])
-    state_dict_template = updates_accross_training[0]
-
-    # print([i for i in weights_over_time[-1]][0:9])
     print("=========================")
-    print(f"weights over time are {weights_over_time[:,0:5]}")
+    print(f"weights over time are {Ws[:,0:5]}")
     print("=========================")
 
     # sanity check 
     # loss over trajectory
-    for i in range (len(list(weights_over_time))):
-        w = weights_over_time[i]
+    for i in range (len(list(Ws))):
+        w = Ws[i]
         sd = plotting_util.numpy_array_to_state_dict(w, weight_shapes, state_dict_template)
         net.load_state_dict(sd)
         net.eval()
@@ -221,6 +219,16 @@ if hparams.loss_plotting:
             Y_pred = net(X[0])
             print(f"loss from trajectory elt {i} is:", loss(Y_pred, Y[0]))
 
+    # sanity check
+    # random point
+    sh = Ws[0].shape
+    r = np.random.random_sample(sh)
+    sd = plotting_util.numpy_array_to_state_dict(r, weight_shapes, state_dict_template)
+    net.load_state_dict(sd)
+    net.eval()
+    with torch.no_grad():
+        Y_pred = net(X[0])
+        print(f"loss from a random point is {loss(Y_pred, Y[0])}")
 
     # print(weights_over_time[:, :3])
 
@@ -228,15 +236,15 @@ if hparams.loss_plotting:
     # make sure weights from cumulative sum agree with final weights
     final_weights = plotting_util.state_dicts_list_to_numpy_array(np.array([state_dict]))
     print("final weights are", final_weights[0, 0:5])
-    assert np.allclose(final_weights[0],
-                       weights_over_time[0, :])
+    # assert np.allclose(final_weights[0],
+    #                    Ws[0, :])
 
     assert np.allclose(final_weights[0],
-                       weights_over_time[-1, :])
+                       Ws[-1, :])
 
     # get directions from gradient updates only, without weights init
 
-    directions = plotter.pca_directions(weights_over_time)
+    directions = plotter.pca_directions(Ws)
     print("++++++++++++++++++++++++++++++")
     print(directions[:, 0:5])
     print(f"Got PCA directions!")
@@ -246,7 +254,7 @@ if hparams.loss_plotting:
                                                 net,
                                                 loss,
                                                 hparams.plot_gridsize,
-                                                weights_over_time,
+                                                Ws,
                                                 weight_shapes,
                                                 state_dict_template,
                                                 config.loss_plots_dir)
