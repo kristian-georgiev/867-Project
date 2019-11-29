@@ -4,7 +4,7 @@ default: &DEFAULT
   model: small_no_batch_norm # model architecture, specified in /models/models.py
   optimizer: adam
   learning_rate: 1e-3
-  num_epochs: 20
+  num_epochs: 1
   n_way: 5
   freeze: 2 # used for anil only, number of layers to freeze
   meta_batch_size: 32 # number of tasks in training batch
@@ -16,11 +16,13 @@ default: &DEFAULT
   plot_progress: true # whether to plot progress during training
   modelpath: ./models/maml/omniglot/small_no_batch_norm/modelname.pt # path to model state_dict
   gradientstepspath: ./models/maml/omniglot/small_no_batch_norm/gradient_updates.npy # path to numpy array of gradient steps
-  plot_gridsize: 100 # number of points in plot meshgrid
+  plot_gridsize: 120 # number of points in plot meshgrid
+  last_n_traj_points: 1
 
 pretrained:
   <<: *DEFAULT
   dataset: omniglot
   seed: 121 # random seed
   loss_plotting: true # whether to plot loss landscape
-  plot_gridsize: 5 # number of points in plot meshgrid
+  plot_gridsize: 50 # number of points in plot meshgrid
+  last_n_traj_points: 15

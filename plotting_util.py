@@ -20,10 +20,10 @@ def state_dicts_list_to_numpy_array(state_dicts):
 
     # print(state_dicts[0].keys())
 
-    for i in range(len(state_dicts)):
-        state_dicts[i] = {state_name:state_dicts[i][state_name]\
-        for state_name in state_dicts[i] \
-        if "weight" in state_name or "bias" in state_name}
+    # for i in range(len(state_dicts)):
+    #     state_dicts[i] = {state_name:state_dicts[i][state_name]\
+    #     for state_name in state_dicts[i] \
+    #     if "weight" in state_name or "bias" in state_name}
 
     # print("after", type(state_dicts), state_dicts.shape, len(state_dicts[0]))
     result = np.vstack([flatten(d, torch=False) for d in state_dicts])
@@ -103,6 +103,7 @@ def flatten(weights_dict, torch=False):
     if torch:
         return torch.cat(flat_weights)
     else:
+        flat_weights = [x.cpu().numpy() for x in flat_weights]
         return np.concatenate(flat_weights)
 
 def loss_eval(i, j, offset, 

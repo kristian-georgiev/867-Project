@@ -4,12 +4,26 @@ import torch.nn.functional as F
 
 def modelloader(modelname):
     modelloaders = {"mini" : mini,
+                    "mini_no_setup" : mini_no_setup,
                     "small_no_batch_norm" : small_no_batch_norm,
                     "small" : small,
                     "medium": medium,
                     "large" : large}
 
     return modelloaders[modelname]
+
+
+# for cli debugging purposes
+def mini_no_setup():
+        return nn.Sequential(
+            nn.Conv2d(in_channels=1, out_channels=2, kernel_size=3, stride=10),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.BatchNorm2d(2, momentum=1, affine=False),
+
+            Flatten(),
+            nn.Linear(2, 5)).to("cpu")
+
 
 # for debugging purposes
 def mini(hparams):
