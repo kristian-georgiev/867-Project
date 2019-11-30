@@ -86,12 +86,13 @@ def plot_loss_landscape(directions,
                             shapes,
                             state_dict_template,
                             hparams)
-        print(f"At {i}, {j}, w\ coords {grid_x[j]}, {grid_y[i]}\
-            the loss from slow weights is {tup[0]},\
-                the loss after fine-tuning is {tup[1]},\
-                projected directions are {tup[3]}")
-        slow_w_loss_grid[i, j], ft_loss_grid[i, j], magn_grid[i, j], v = tup
-        vectors_grid_x[i, j], vectors_grid_y[i, j] = v[0], v[1]
+            slow_w_loss_grid[i, j], ft_loss_grid[i, j], magn_grid[i, j], v = tup
+            vectors_grid_x[i, j], vectors_grid_y[i, j] = v[0], v[1]
+            print(f"At {i}, {j}, w\ coords {grid_x[j]}, {grid_y[i]}\
+                the loss from slow weights is {slow_w_loss_grid[i, j]},\
+                    the loss after fine-tuning is {ft_loss_grid[i, j]},\
+                    projected directions are {vectors_grid_x[i, j]} \
+                        and {vectors_grid_x[i, j], vectors_grid_y[i, j]}")
 
     # print("END LOSS IS:")
     # print(loss_eval(0, 0, offset, loss, directions, X, Y, ml, k_query, shapes, state_dict_template))
