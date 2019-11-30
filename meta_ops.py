@@ -112,23 +112,7 @@ def train_maml(db, net, device, meta_opt, epoch, log):
         i = epoch + float(batch_idx) / n_train_iter
         iter_time = time.time() - start_time
         if batch_idx % 4 == 0:
-            print(
-                f'[Epoch {i:.2f}] Train Loss: {qry_losses:.2f} | Acc: {qry_accs:.2f} | Time: {iter_time:.2f}'
-            )
-
-
-        qry_logits = net(x_qry[0])
-        qry_loss = F.cross_entropy(qry_logits, y_qry[0])
-        print("cross entropy from net is", qry_loss)
-
-        torch.save(net.state_dict(), 'tmp.pt')
-        state_dict = torch.load('tmp.pt')
-        net.load_state_dict(state_dict)
-        net.eval()
-        with torch.no_grad(): 
-            net(x_qry[0])
-            qry_loss = F.cross_entropy(qry_logits, y_qry[0])
-            print("cross entropy should match above", qry_loss)
+            print(f'[Epoch {i:.2f}] Train Loss: {qry_losses:.2f} | Acc: {qry_accs:.2f} | Time: {iter_time:.2f}')
 
         log.append({
             'epoch': i,

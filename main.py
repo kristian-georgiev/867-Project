@@ -108,11 +108,6 @@ if not config.parameters_choice == "pretrained":
     # -----------------
     log = []
     weights_over_time = [copy.deepcopy(net.state_dict())]
-    # print("~~~~INITIAL UPDATES ACCROSS TRAINING ARE~~~~~")
-    # print(np.array(updates_accross_training))
-    # print("~~~~~~~~~~~~~~~")
-    # print(plotting_util.state_dicts_list_to_numpy_array(updates_accross_training))
-    # print("~~~~~~~~~END INITIAL~~~~~~~~~~~~~~~~~~~~~")
 
     print(f"Training for {hparams.num_epochs} epochs.")
     for epoch in range(hparams.num_epochs):
@@ -125,33 +120,20 @@ if not config.parameters_choice == "pretrained":
         test(**test_dict)
 
         if hparams.saving_gradient_steps:
-            # print("==========================")
-            # print("state dict is", net.state_dict())
-            # print("net params are", list(net.parameters()))
-            # print("--------------------------")
-            # previous_weights = updates_accross_training[-1]
-            # new_weights = net.state_dict()
-            # gradient_update = {key: new_weights.get(key, 0) - previous_weights[key] for key in previous_weights.keys()}
             weights_over_time.append(copy.deepcopy(net.state_dict()))
-
-            # print("~~~~~~UPDATES ACCROSS TRAINING~~~~~~~")
-            # print(np.array(updates_accross_training))
-            # print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
         if hparams.plot_progress:
             plotter.plot_progress(log)
+
     # serialize model
     np.save(hparams.gradientstepspath, np.array(weights_over_time))
     torch.save(net.state_dict(), hparams.modelpath)
 
-    # state_dict = net.state_dict()
-
     # load model state dictionary
-    # state_dict = torch.load(hparams.modelpath)
-    state_dict = net.state_dict()
+    state_dict = copy.deepcopy(net.state_dict())
+
     for key in state_dict:
         assert torch.all(torch.eq(state_dict[key], weights_over_time[-1][key]))
-    print("successful assertion!")
 
 
 
@@ -165,23 +147,21 @@ else: # config.parameters_choice == "pretrained"
     modelloader = models.modelloader(hparams.model)
     net = modelloader(hparams)
     net.load_state_dict(state_dict)
-    # print(net.state_dict()["0.weight"][0])
 
     # load gradient updates
     weights_over_time = np.load(hparams.gradientstepspath, allow_pickle=True)
-    # print(updates_accross_training.shape)
     print("Loaded model and gradient updates!")
 
 
 if hparams.loss_plotting:
 
-
     # sanity check
+    # ==================================================
     net2 = models.modelloader(hparams.model)(hparams)
     net2.load_state_dict(copy.deepcopy(state_dict))
     for key in net.state_dict():
         torch.eq(net.state_dict()[key], net2.state_dict()[key])
-        # net.state_dict()[key] = net.state_dict()[key].cpu()
+    # ==================================================
 
     # init dataloader
     dataloader = dl.dataloader(hparams)
@@ -195,28 +175,30 @@ if hparams.loss_plotting:
 
     # sanity check
     # make sure end loss is small 
+    # ==================================================
     net.eval()    
     print([i for i in net.parameters()][0][0][0])
     with torch.no_grad(): 
         Y_pred = net(X[0])
     print("loss from sanity check is:", loss(Y_pred, Y[0]))
+    # ==================================================
 
 
     Ws = plotting_util.state_dicts_list_to_numpy_array(weights_over_time)
     index_weights_to_take = len(Ws) - hparams.last_n_traj_points - 1
-    print(index_weights_to_take)
     Ws = Ws[index_weights_to_take:]
-    print(f"Length of trajectory is {len(Ws)}")
 
     weight_shapes = plotting_util.get_shapes_indices(weights_over_time[0])
     state_dict_template = weights_over_time[0]
 
+
+    # sanity check 
+    # loss over trajectory
+    # ==================================================
     print("=========================")
     print(f"weights over time are {Ws[:,0:5]}")
     print("=========================")
 
-    # sanity check 
-    # loss over trajectory
     for i in range (len(list(Ws))):
         w = Ws[i]
         sd = plotting_util.numpy_array_to_state_dict(w, weight_shapes, state_dict_template)
@@ -226,9 +208,13 @@ if hparams.loss_plotting:
         with torch.no_grad():
             Y_pred = net(X[0])
             print(f"loss from trajectory elt {i} is:", loss(Y_pred, Y[0]))
+    # ==================================================
+
+
 
     # sanity check
     # random point
+    # ==================================================
     sh = Ws[0].shape
     r = np.random.random_sample(sh)
     sd = plotting_util.numpy_array_to_state_dict(r, weight_shapes, state_dict_template)
@@ -237,23 +223,18 @@ if hparams.loss_plotting:
     with torch.no_grad():
         Y_pred = net(X[0])
         print(f"loss from a random point is {loss(Y_pred, Y[0])}")
+    # ==================================================
 
-    # print(weights_over_time[:, :3])
 
     # sanity check
+    # ==================================================
     # make sure weights from cumulative sum agree with final weights
     final_weights = plotting_util.state_dicts_list_to_numpy_array([state_dict])
-    print("final weights are", final_weights[0, 0:5])
-    # assert np.allclose(final_weights[0],
-    #                    Ws[0, :])
-
-    print("some elements", final_weights[-1][0:2], Ws[-1][0:2])
     assert np.allclose(final_weights[-1], Ws[-1])
+    # ==================================================
 
-    # get directions from gradient updates only, without weights init
-
+    # get directions from weights over time
     directions = plotter.pca_directions(Ws)
-    print("++++++++++++++++++++++++++++++")
     print(directions[:, 0:5])
     print(f"Got PCA directions!")
 
