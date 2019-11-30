@@ -8,6 +8,7 @@ plt.style.use('bmh')
 from collections import OrderedDict
 import torch.nn.functional as F
 from sklearn.decomposition import PCA
+import copy
 
 import pdb
 
@@ -79,26 +80,12 @@ def project_onto(weights, directions, offset):
     return projection_coeffs
 
 def loss_eval(i, j, offset, 
-              loss, directions, 
-              X, Y, 
-              architecture,
+              loss, directions,
+              X, Y,
+              ml,
               shapes,
-              state_dict_template):
-    """Evaluate loss on test set at the point given by i, j, directions
-    
-    Arguments:
-        i {float} -- coeff. for first direction, in [-1, 1]
-        j {float} -- coeff. for second direction, in [-1, 1]
-        offset -- offset of the affine subspace spanned by the directions
-        loss {function} -- loss f-n to be evaluated
-        directions {list(OrderedDict)} -- list of two directions we got from PCA
-        test_dataset {tuple} -- tuple of (X, Y) loaded from dataloader
-        architecture {torch.Sequential} -- PyTorch net
-    
-    Returns:
-        float -- loss evaluated at 
-        architecture(weights = i * dir[0] + j * dir[1]) on test_dataset
-    """
+              state_dict_template,
+              hparams):
     assert len(directions) == 2
     weights = i * directions[0] + j * directions[1] + offset
 
@@ -108,11 +95,32 @@ def loss_eval(i, j, offset,
                                           shapes, 
                                           state_dict_template)
 
-    architecture.load_state_dict(new_state)
-    architecture.eval()
-    
-    with torch.no_grad(): 
-        Y_pred = architecture(X)
-    loss_val = loss(Y_pred, Y)
 
-    return float(loss_val)
+    net = ml(hparams)
+    net.load_state_dict(new_state)
+    opt = torch.optim.Adam(net.parameters(), lr=1e-1)
+
+    net.eval()
+    with torch.no_grad(): 
+        Y_pred = net(X)
+    init_loss = loss(Y_pred, Y)
+
+    net.train()
+    for i in range(hparams.k_query):
+        predictions = net(X)
+        ft_loss = F.cross_entropy(predictions, Y)
+        ft_loss.backward()
+        opt.step()
+
+    net.eval()
+
+    finetuned_state = copy.deepcopy(net.state_dict())
+    finetuned_weights = state_dicts_list_to_numpy_array([finetuned_state])[0]
+    update_magnitude = np.sum(get_rescaling_factors(finetuned_weights - weights, shapes)) # sum of Frob. norms of filters/layers
+    projected_vector_update = project_onto(finetuned_weights, directions, offset)
+
+    with torch.no_grad(): 
+        Y_pred = net(X)
+    finetuned_loss = loss(Y_pred, Y)
+
+    return float(init_loss), float(finetuned_loss), update_magnitude, tuple(projected_vector_update)

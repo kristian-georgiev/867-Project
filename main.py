@@ -135,9 +135,6 @@ if not config.parameters_choice == "pretrained":
     for key in state_dict:
         assert torch.all(torch.eq(state_dict[key], weights_over_time[-1][key]))
 
-
-
-
 else: # config.parameters_choice == "pretrained"
 
     # load model state dictionary
@@ -151,7 +148,6 @@ else: # config.parameters_choice == "pretrained"
     # load gradient updates
     weights_over_time = np.load(hparams.gradientstepspath, allow_pickle=True)
     print("Loaded model and gradient updates!")
-
 
 if hparams.loss_plotting:
 
@@ -238,13 +234,15 @@ if hparams.loss_plotting:
     print(directions[:, 0:5])
     print(f"Got PCA directions!")
 
+    ml = models.modelloader(hparams.model)
+
     plot_filename = plotter.plot_loss_landscape(directions,
                                                 test_dataset,
-                                                net,
+                                                ml,
                                                 loss,
-                                                hparams.plot_gridsize,
                                                 Ws,
                                                 weight_shapes,
                                                 state_dict_template,
-                                                config.loss_plots_dir)
+                                                config.loss_plots_dir,
+                                                hparams)
     print(f"Saved plots in {config.loss_plots_dir}/{plot_filename}")

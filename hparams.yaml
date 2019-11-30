@@ -4,7 +4,7 @@ default: &DEFAULT
   model: small_no_batch_norm # model architecture, specified in /models/models.py
   optimizer: adam
   learning_rate: 1e-3
-  num_epochs: 1
+  num_epochs: 2
   n_way: 5
   freeze: 2 # used for anil only, number of layers to freeze
   meta_batch_size: 32 # number of tasks in training batch
@@ -24,5 +24,5 @@ pretrained:
   dataset: omniglot
   seed: 121 # random seed
   loss_plotting: true # whether to plot loss landscape
-  plot_gridsize: 50 # number of points in plot meshgrid
+  plot_gridsize: 5 # number of points in plot meshgrid
   last_n_traj_points: 15

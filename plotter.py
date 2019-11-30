@@ -22,13 +22,15 @@ def pca_directions(weights_accross_training):
 
 def plot_loss_landscape(directions, 
                         test_dataset, 
-                        architecture, 
-                        loss, 
-                        k, 
+                        ml,
+                        loss,
                         weights_over_time, 
                         shapes, 
                         state_dict_template,
-                        plot_dir):   
+                        plot_dir,
+                        hparams):   
+
+    gridsize = hparams.plot_gridsize
 
     # rescaling
     dirs_norms = [get_rescaling_factors(d, shapes) for d in directions]
@@ -64,42 +66,56 @@ def plot_loss_landscape(directions,
     min_y, max_y = min(y_traj), max(y_traj)
     margin_y = (max_y - min_y) * 0.1
 
-    grid_x = np.linspace(min_x - margin_x, max_x + margin_x, k)
-    grid_y = np.linspace(min_y - margin_y, max_y + margin_y, k)
+    grid_x = np.linspace(min_x - margin_x, max_x + margin_x, gridsize)
+    grid_y = np.linspace(min_y - margin_y, max_y + margin_y, gridsize)
     
-    loss_grid = np.empty((k, k))
-    for i in range(k):
-        for j in range(k): 
-            loss_grid[i, j] = loss_eval(grid_x[j],
-                                        grid_y[i],
-                                        offset,
-                                        loss,
-                                        directions,
-                                        X, Y,
-                                        architecture,
-                                        shapes,
-                                        state_dict_template)
+    slow_w_loss_grid = np.empty((gridsize, gridsize))
+    ft_loss_grid = np.empty((gridsize, gridsize))
+    magn_grid = np.empty((gridsize, gridsize))
+    vectors_grid_x = np.empty((gridsize, gridsize))
+    vectors_grid_y = np.empty((gridsize, gridsize))
+    for i in range(gridsize):
+        for j in range(gridsize): 
+            tup = loss_eval(grid_x[j],
+                            grid_y[i],
+                            offset,
+                            loss,
+                            directions,
+                            X, Y,
+                            ml,
+                            shapes,
+                            state_dict_template,
+                            hparams)
+        print(f"At {i}, {j}, w\ coords {grid_x[j]}, {grid_y[i]}\
+            the loss from slow weights is {tup[0]},\
+                the loss after fine-tuning is {tup[1]},\
+                projected directions are {tup[3]}")
+        slow_w_loss_grid[i, j], ft_loss_grid[i, j], magn_grid[i, j], v = tup
+        vectors_grid_x[i, j], vectors_grid_y[i, j] = v
 
-    print("END LOSS IS:")
-    print(loss_eval(0, 0, offset, loss, directions, X, Y, architecture, shapes, state_dict_template))
+    # print("END LOSS IS:")
+    # print(loss_eval(0, 0, offset, loss, directions, X, Y, ml, k_query, shapes, state_dict_template))
 
-    print("SLIGHT PERTUBATION OF IT IS:")
-    print(loss_eval(0.01, 0.01, offset, loss, directions, X, Y, architecture, shapes, state_dict_template))
+    # print("SLIGHT PERTUBATION OF IT IS:")
+    # print(loss_eval(0.01, 0.01, offset, loss, directions, X, Y, ml, k_query, shapes, state_dict_template))
 
-    print("SWING OF IT IS:")
-    print(loss_eval(-0.09, 0.0025, offset, loss, directions, X, Y, architecture, shapes, state_dict_template))
+    # print("SWING OF IT IS:")
+    # print(loss_eval(-0.09, 0.0025, offset, loss, directions, X, Y, ml, k_query, shapes, state_dict_template))
 
     gx, gy = np.meshgrid(grid_x, grid_y)
-    C = ax.contourf(gx, gy, loss_grid , levels=k, cmap=plt.cm.coolwarm)
+    C = ax.contourf(gx, gy, ft_loss_grid,
+                    levels=gridsize,
+                    cmap=plt.cm.coolwarm)
     cbar = fig.colorbar(C)
     print("Got contour plot!")
     print("LOSS GRID IS:")
-    print(loss_grid)
+    print(ft_loss_grid)
 
     # plots the trajectory
     plt.plot(x_traj, y_traj, c='black', lw='3')
     plt.scatter(x_traj[-1], y_traj[-1], marker='X', c='white', s=160)
     
+    plt.quiver(gx, gy, vectors_grid_x, vectors_grid_y)
 
     filename = "trajectory.png"
     ax.set_title("Trajectory over training.")

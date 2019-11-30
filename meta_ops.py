@@ -55,7 +55,6 @@ def train_maml(db, net, device, meta_opt, epoch, log):
         start_time = time.time()
         # Sample a batch of support and query images and labels.
         x_spt, y_spt, x_qry, y_qry = db.next()
-        # print(f"In this batch, we have x_support {x_spt.shape}, y_support {y_spt.shape}, x_query {x_qry.shape}, y_query {y_qry.shape}.")
 
         task_num, setsz, c_, h, w = x_spt.size()
         querysz = x_qry.size(1)
@@ -74,11 +73,9 @@ def train_maml(db, net, device, meta_opt, epoch, log):
         meta_opt.zero_grad()
         # so task_num is the meta batch
         for i in range(task_num):
-            # print(i) # so now we are at task i: we have 32 tasks with 5 sampled classes 
-                     # (5-way) and 5 examples from each class (5-shot)
-            with higher.innerloop_ctx(
-                net, inner_opt, copy_initial_weights=False
-            ) as (fnet, diffopt):
+            # now we are at task i: we have 32 tasks with 5 sampled classes 
+            # (5-way) and 5 examples from each class (5-shot)
+            with higher.innerloop_ctx(net, inner_opt, copy_initial_weights=False) as (fnet, diffopt):
                 # Optimize the likelihood of the support set by taking
                 # gradient steps w.r.t. the model's parameters.
                 # This adapts the model's meta-parameters to the task.
@@ -105,6 +102,7 @@ def train_maml(db, net, device, meta_opt, epoch, log):
                 # losses across all of the tasks sampled in this batch.
                 # This unrolls through the gradient steps.
                 qry_loss.backward()
+
         meta_opt.step()
 
         qry_losses = sum(qry_losses) / task_num
@@ -166,8 +164,8 @@ def train_anil(db, net, device, meta_opt, epoch, log, freeze):
         meta_opt.zero_grad()
         # so task_num is the meta batch
         for i in range(task_num):
-            # print(i) # so now we are at task i: we have 32 tasks with 5 sampled classes 
-                     # (5-way) and 5 examples from each class (5-shot)
+            # so now we are at task i: we have 32 tasks with 5 sampled classes 
+            # (5-way) and 5 examples from each class (5-shot)
             with higher.innerloop_ctx(
                 net, inner_opt, copy_initial_weights=False
             ) as (fnet, diffopt):
@@ -215,8 +213,6 @@ def train_anil(db, net, device, meta_opt, epoch, log, freeze):
             'mode': 'train',
             'time': time.time(),
         })
-
-
 
 def test_maml(db, net, device, epoch, log):
     # Crucially in our testing procedure here, we do *not* fine-tune
