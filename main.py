@@ -66,6 +66,8 @@ hparams_choice = config.parameters_choice
 # parse hyperparameters
 hparams = Munch(parse(config.parameters_file)[hparams_choice])
 
+print(hparams)
+
 # set random seed
 torch.manual_seed(hparams.seed)
 if torch.cuda.is_available():
@@ -162,7 +164,8 @@ if hparams.loss_plotting:
     # init dataloader
     dataloader = dl.dataloader(hparams)
 
-    test_dataset = dataloader.next(mode='test')
+    for i in range(hparams.index):
+        test_dataset = dataloader.next(mode='test')
     _, __, X, Y = test_dataset # take only query dataset
     test_dataset = (X, Y)
 

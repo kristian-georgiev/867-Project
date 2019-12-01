@@ -121,8 +121,14 @@ def plot_loss_landscape(directions,
     
     plt.quiver(gx, gy, vectors_grid_x, vectors_grid_y)
 
-    filename = "trajectory.png"
-    ax.set_title("Trajectory over training.")
+    title = '_'.join([hparams.meta_learner, \
+                         hparams.dataset, \
+                         str(hparams.index), \
+                         str(hparams.lr_finetune), \
+                         str(hparams.last_n_traj_points), \
+                         str(hparams.num_epochs)])
+    ax.set_title(title)
+    filename = title + '.png'
     plt.savefig(f"{plot_dir}/{filename}")
 
     return filename
