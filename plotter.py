@@ -47,7 +47,7 @@ def plot_loss_landscape(directions,
     Y = Y[0]
 
     trajectory = []
-    offset = weights_over_time[-1]
+    offset = np.mean(weights_over_time, axis=0)
 
     for weights in weights_over_time:
         projected_weights = project_onto(weights, directions, offset)

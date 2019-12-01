@@ -11,7 +11,7 @@ hyperparameters are in README.md
 # repository for the higher library. The original can be found at
 # https://github.com/facebookresearch/higher/blob/master/examples/maml-omniglot.py
 
-# below is the description of the 
+# below is the description of the file we adapted
 """
 Copyright (c) Facebook, Inc. and its affiliates.
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,16 +55,40 @@ import plotter
 import plotting_util
 import dataloader as dl
 import pdb
+import argparse
 
 
-# parse config
-config_choice = sys.argv[1].rstrip()
-config = parse("config.yaml")[config_choice]
-config = Munch(config)
-hparams_choice = config.parameters_choice
+argparser = argparse.ArgumentParser()
+argparser.add_argument('--model_training', 
+                       choices=["train_new", "pretrained"], required=True,
+                       help="Choose whether to train a new model or load a \
+                             pretrained one.")
+argparser.add_argument('--meta_learner',
+                       choices=["maml", "anil", "sgd"],
+                       help="Choose meta-learning algorithm to follow.\
+                             If sgd is chosen, simply joint training is performed.")
+argparser.add_argument('--dataset', choices=["omniglot", "quickdraw"])
+argparser.add_argument('--hparams_file', type=str, default="./hparams.yaml")
+argparser.add_argument('--loss_plots_dir', type=str, default="./plots")
+argparser.add_argument('--use_gpu', type=bool, default=True)
+
+args = argparser.parse_args()
 
 # parse hyperparameters
-hparams = Munch(parse(config.parameters_file)[hparams_choice])
+hparams = Munch(parse(args.hparams_file)[args.model_training])
+if args.meta_learner:
+    hparams.meta_learner = args.meta_learner
+
+
+if args.dataset:
+    hparams.dataset = args.dataset
+
+hparams.modelpath += "/" + hparams.meta_learner + "/" + hparams.dataset + "/" +\
+    hparams.model + "/" + hparams.modelname
+
+hparams.trajpath += "/" + hparams.meta_learner + "/" + hparams.dataset + "/" +\
+    hparams.model + "/" + hparams.weightstrajfilename
+
 
 print(hparams)
 
@@ -75,11 +99,11 @@ if torch.cuda.is_available():
 np.random.seed(hparams.seed)
 
 # init CPU / GPU
-device = torch.device("cuda:0" if torch.cuda.is_available() and config.gpu_available else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() and args.use_gpu else "cpu")
 hparams.update(device=device)
 print(f"Device is {hparams.device}.")
 
-if not config.parameters_choice == "pretrained":
+if not args.model_training == "pretrained":
     # init model
     modelloader = models.modelloader(hparams.model)
     net = modelloader(hparams)
@@ -128,7 +152,7 @@ if not config.parameters_choice == "pretrained":
             plotter.plot_progress(log)
 
     # serialize model
-    np.save(hparams.gradientstepspath, np.array(weights_over_time))
+    np.save(hparams.trajpath, np.array(weights_over_time))
     torch.save(net.state_dict(), hparams.modelpath)
 
     # load model state dictionary
@@ -137,7 +161,7 @@ if not config.parameters_choice == "pretrained":
     for key in state_dict:
         assert torch.all(torch.eq(state_dict[key], weights_over_time[-1][key]))
 
-else: # config.parameters_choice == "pretrained"
+else: # args.model_training == "pretrained"
 
     # load model state dictionary
     state_dict = torch.load(hparams.modelpath)
@@ -148,7 +172,7 @@ else: # config.parameters_choice == "pretrained"
     net.load_state_dict(state_dict)
 
     # load gradient updates
-    weights_over_time = np.load(hparams.gradientstepspath, allow_pickle=True)
+    weights_over_time = np.load(hparams.trajpath, allow_pickle=True)
     print("Loaded model and gradient updates!")
 
 if hparams.loss_plotting:
@@ -246,6 +270,6 @@ if hparams.loss_plotting:
                                                 Ws,
                                                 weight_shapes,
                                                 state_dict_template,
-                                                config.loss_plots_dir,
+                                                args.loss_plots_dir,
                                                 hparams)
-    print(f"Saved plots in {config.loss_plots_dir}/{plot_filename}")
+    print(f"Saved plots in {args.loss_plots_dir}/{plot_filename}")
