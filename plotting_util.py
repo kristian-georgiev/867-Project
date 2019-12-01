@@ -98,7 +98,7 @@ def loss_eval(i, j, offset,
 
     net = ml(hparams)
     net.load_state_dict(new_state)
-    opt = torch.optim.Adam(net.parameters(), lr=1e-1)
+    opt = torch.optim.Adam(net.parameters(), lr=1e-2)
 
     net.eval()
     with torch.no_grad(): 
@@ -106,7 +106,7 @@ def loss_eval(i, j, offset,
     init_loss = loss(Y_pred, Y)
 
     net.train()
-    for i in range(hparams.k_query):
+    for i in range(hparams.n_inner_iter):
         predictions = net(X)
         ft_loss = F.cross_entropy(predictions, Y)
         ft_loss.backward()
@@ -121,6 +121,6 @@ def loss_eval(i, j, offset,
 
     with torch.no_grad(): 
         Y_pred = net(X)
-    finetuned_loss = loss(Y_pred, Y)
+    finetuned_loss = loss(Y_pred, Y)    
 
     return float(init_loss), float(finetuned_loss), update_magnitude, tuple(projected_vector_update)

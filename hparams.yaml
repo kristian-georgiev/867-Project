@@ -10,6 +10,7 @@ default: &DEFAULT
   meta_batch_size: 32 # number of tasks in training batch
   k_support: 5 # k shot for support set
   k_query: 15 # k shot for query set
+  n_inner_iter: 5 # number of iterations in inner loop
   seed: 121 # random seed
   saving_gradient_steps: true # save gradient steps to get which directions to plot
   loss_plotting: true # whether to plot loss landscape
@@ -24,5 +25,5 @@ pretrained:
   dataset: omniglot
   seed: 121 # random seed
   loss_plotting: true # whether to plot loss landscape
-  plot_gridsize: 5 # number of points in plot meshgrid
+  plot_gridsize: 2 # number of points in plot meshgrid
   last_n_traj_points: 15
