@@ -114,7 +114,12 @@ def loss_eval(i, j, offset,
     return float(init_loss), float(finetuned_loss), update_magnitude, tuple(projected_vector_update)
 
 
-def plot_images(batch):
-    for im in batch: 
+def plot_images(batch, labels, dataset):
+    print("inside plot images")
+    for k, im in enumerate(batch): 
         pixels = np.reshape(im.cpu().numpy(), (28, 28))
         plt.imshow(pixels, cmap='gray')
+        label = str(labels[k].cpu().numpy())
+        plt.title(label)
+        plt.savefig('plots/data/' + dataset + '/' + label + '_' + str(k) + '.png')
+        plt.close()

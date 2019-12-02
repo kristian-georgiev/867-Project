@@ -200,8 +200,7 @@ if hparams.loss_plotting:
     _, __, X, Y = test_dataset # take only query dataset
     test_dataset = (X, Y)
 
-    plotting_util.plot_images(X[0])
-    pdb.set_trace()
+    plotting_util.plot_images(X[0], Y[0], hparams.dataset)
 
     # define loss
     loss = F.cross_entropy
