@@ -14,8 +14,7 @@ import pdb
 
 def pca_directions(weights_accross_training):
     pca = PCA(n_components=2)
-    last_w = weights_accross_training[-1]
-    pca.fit(weights_accross_training - last_w)
+    pca.fit(weights_accross_training)
     dirs = pca.components_
 
     return dirs
@@ -32,13 +31,29 @@ def plot_loss_landscape(directions,
 
     gridsize = hparams.plot_gridsize
 
+    # not doing that!
     # rescaling
-    dirs_norms = [get_rescaling_factors(d, shapes) for d in directions]
-    last_weights_norm = get_rescaling_factors(weights_over_time[-1], shapes)
-    for i in range(len(directions)):
-        m = list(np.array(last_weights_norm) / np.array(dirs_norms[i]))
-        directions[i] = multiply_filterwise(directions[i], shapes, m)
-    print("Rescaled directions!")
+    # dirs_norms = [get_rescaling_factors(d, shapes) for d in directions]
+    # last_weights_norm = get_rescaling_factors(weights_over_time[-1], shapes)
+    # for i in range(len(directions)):
+    #     m = list(np.array(last_weights_norm) / np.array(dirs_norms[i]))
+    #     directions[i] = multiply_filterwise(directions[i], shapes, m)
+    # print("Rescaled directions!")
+
+
+    offset = np.mean(weights_over_time, axis=0)
+
+    w_coeffs = np.dot(weights_over_time - offset, directions.T)
+    projected_ws = np.dot(w_coeffs, directions) + offset
+
+
+
+    for i, weights in enumerate(weights_over_time):
+        err = np.linalg.norm(projected_ws[i] - weights)
+        print(f"For weight vector {i} in trajectory, we have a projection error of {err:.2f}, which is {err / np.linalg.norm(weights):.2f}%")
+        # trajectory.append(projected_weights_coeffs)
+    trajectory = projected_ws
+
 
     # constructs the test dataset
     X, Y = test_dataset
@@ -46,13 +61,7 @@ def plot_loss_landscape(directions,
     X = X[0] # TODO update to an average over all test tasks
     Y = Y[0]
 
-    trajectory = []
-    offset = np.mean(weights_over_time, axis=0)
-
-    for weights in weights_over_time:
-        projected_weights = project_onto(weights, directions, offset)
-        trajectory.append(projected_weights)
-    trajectory = trajectory[1:]
+    # trajectory = []
 
     fig, ax = plt.subplots()
 

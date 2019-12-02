@@ -67,18 +67,6 @@ def multiply_filterwise(arr, shapes, multipliers):
 
     return arr * m
 
-def project_onto(weights, directions, offset):
-    assert len(weights) == len(directions[0])
-
-    projection_coeffs = []
-
-    for d in directions:
-        v = weights - offset
-        coeff = np.dot(v, d) / np.linalg.norm(d)
-        projection_coeffs.append(coeff)
-
-    return projection_coeffs
-
 def loss_eval(i, j, offset, 
               loss, directions,
               X, Y,
