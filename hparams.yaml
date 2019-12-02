@@ -5,7 +5,7 @@ train_new: &DEFAULT
   optimizer: adam
   learning_rate: 1e-3
   lr_finetune: 5e-3
-  num_epochs: 2
+  num_epochs: 10
   n_way: 5
   freeze: 2 # used for anil only, number of layers to freeze
   meta_batch_size: 32 # number of tasks in training batch
@@ -21,7 +21,7 @@ train_new: &DEFAULT
   modelname: modelname.pt
   weightstrajfilename: weights_trajectories.npy # path to numpy array of weight trajectories
   plot_gridsize: 120 # number of points in plot meshgrid
-  last_n_traj_points: 1
+  last_n_traj_points: 10
 
 pretrained:
   <<: *DEFAULT

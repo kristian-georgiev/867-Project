@@ -123,10 +123,12 @@ if not args.model_training == "pretrained":
     train_dict = {'db': dataloader, 
                 'net': net, 
                 'device': device, 
-                'meta_opt': meta_optim}
+                'meta_opt': meta_optim,
+                'lr_finetune': hparams.lr_finetune}
     test_dict = {'db': dataloader, 
                 'net': net, 
-                'device': device}
+                'device': device,
+                'lr_finetune': hparams.lr_finetune}
 
 
     # -----------------

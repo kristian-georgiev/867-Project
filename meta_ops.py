@@ -103,7 +103,7 @@ def train_sgd(db, net, device, meta_opt, epoch, log):
             'time': time.time(),
         })
 
-def train_maml(db, net, device, meta_opt, epoch, log):
+def train_maml(db, net, device, meta_opt, lr_finetune, epoch, log):
     # call this before starting to train: this enables modules like dropout.
     net.train()
     n_train_iter = db.x_train.shape[0] // db.batchsz
@@ -122,7 +122,7 @@ def train_maml(db, net, device, meta_opt, epoch, log):
         # Initialize the inner optimizer to adapt the parameters to
         # the support set.
         n_inner_iter = 5
-        inner_opt = torch.optim.SGD(net.parameters(), lr=1e-1)
+        inner_opt = torch.optim.SGD(net.parameters(), lr=lr_finetune)
         # thus the inner optimizer will do 5 steps of SGD to get the fast weights
 
         qry_losses = []
@@ -271,7 +271,7 @@ def train_anil(db, net, device, meta_opt, epoch, log, freeze):
             'time': time.time(),
         })
 
-def test_maml(db, net, device, epoch, log):
+def test_maml(db, net, device, lr_finetune, epoch, log):
     # Crucially in our testing procedure here, we do *not* fine-tune
     # the model during testing for simplicity.
     # Most research papers using MAML for this task do an extra
@@ -293,7 +293,7 @@ def test_maml(db, net, device, epoch, log):
         # TODO: Maybe pull this out into a separate module so it
         # doesn't have to be duplicated between `train` and `test`?
         n_inner_iter = 5
-        inner_opt = torch.optim.SGD(net.parameters(), lr=1e-1)
+        inner_opt = torch.optim.SGD(net.parameters(), lr=lr_finetune)
 
         for i in range(task_num):
             with higher.innerloop_ctx(net, inner_opt, track_higher_grads=False) as (fnet, diffopt):
