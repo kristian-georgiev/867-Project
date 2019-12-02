@@ -175,6 +175,10 @@ else: # args.model_training == "pretrained"
 
 if hparams.loss_plotting:
 
+
+    for n in state_dict:
+        print(f"Layer {n}, shape {state_dict[n].shape}")
+
     # sanity check
     # ==================================================
     net2 = models.modelloader(hparams.model)(hparams)
@@ -210,6 +214,15 @@ if hparams.loss_plotting:
 
     weight_shapes = plotting_util.get_shapes_indices(weights_over_time[0])
     state_dict_template = weights_over_time[0]
+
+
+    # sanity check 
+    # ==================================================
+    # conversion from dict of tensors to numpy array and back
+    to_np_and_back = plotting_util.numpy_array_to_state_dict(plotting_util.state_dicts_list_to_numpy_array([state_dict])[0], weight_shapes, state_dict_template)
+    for n in state_dict:
+        assert torch.all(torch.eq(state_dict[n], to_np_and_back[n]))
+    # ==================================================
 
 
     # sanity check 

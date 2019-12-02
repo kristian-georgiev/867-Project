@@ -42,14 +42,14 @@ def numpy_array_to_state_dict(arr, shapes, state_dict_template):
 
 def get_shapes_indices(weights_dict):
     shapes = [np.prod(weights_dict[t].shape) for t in weights_dict]
-    # shapes looks like [num_params_in_layer_1, num_params_in_layer_2, ...]
+    # shapes looks like [num_params_in_filter_1, num_params_in_filter_2, ...]
     ind = np.cumsum(shapes)
     result = [(0, ind[0])]
     for i in range(len(ind) - 1):
         result.append((ind[i], ind[i + 1]))
 
     # result, a list of tuples, looks like 
-    # [(0:num_params_in_layer_1), (num_params_in_layer_1: num_params_in_layer_2), ...]
+    # [(0:num_params_in_filter_1), (num_params_in_filter_1: num_params_in_filter_2), ...]
     return result
 
 def get_rescaling_factors(arr, shapes):
