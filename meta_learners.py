@@ -19,6 +19,11 @@ class meta_learner():
             self.train = meta_ops.train_anil
             self.test  = meta_ops.test_maml
 
+        elif self.name == "sgd":
+            self.algorithm = self.init_sgd()
+            self.train = meta_ops.train_sgd
+            self.test = meta_ops.test_sgd
+
 
     def init_maml(self):
         pass
@@ -27,6 +32,9 @@ class meta_learner():
         pass
 
     def init_anil(self):
+        pass
+
+    def init_sgd(self):
         pass
 
     def get_train_and_test(self):

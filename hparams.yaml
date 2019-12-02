@@ -1,9 +1,10 @@
 train_new: &DEFAULT
-  dataset: omniglot # omniglot / miniimagenet / quickdraw
+  dataset: quickdraw # omniglot / miniimagenet / quickdraw
   meta_learner: maml # maml / reptile / anil
   model: small_no_batch_norm # model architecture, specified in /models/models.py
   optimizer: adam
   learning_rate: 1e-3
+  lr_finetune: 5e-3
   num_epochs: 2
   n_way: 5
   freeze: 2 # used for anil only, number of layers to freeze
