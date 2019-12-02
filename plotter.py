@@ -47,7 +47,7 @@ def plot_loss_landscape(directions,
     Y = Y[0]
 
     trajectory = []
-    offset = weights_over_time[-1]
+    offset = np.mean(weights_over_time, axis=0)
 
     for weights in weights_over_time:
         projected_weights = project_onto(weights, directions, offset)
@@ -121,8 +121,14 @@ def plot_loss_landscape(directions,
     
     plt.quiver(gx, gy, vectors_grid_x, vectors_grid_y)
 
-    filename = "trajectory.png"
-    ax.set_title("Trajectory over training.")
+    title = '_'.join([hparams.meta_learner, \
+                         hparams.dataset, \
+                         str(hparams.index), \
+                         str(hparams.lr_finetune), \
+                         str(hparams.last_n_traj_points), \
+                         str(hparams.num_epochs)])
+    ax.set_title(title)
+    filename = title + '.png'
     plt.savefig(f"{plot_dir}/{filename}")
 
     return filename

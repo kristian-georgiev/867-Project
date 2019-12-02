@@ -98,7 +98,7 @@ def loss_eval(i, j, offset,
 
     net = ml(hparams)
     net.load_state_dict(new_state)
-    opt = torch.optim.Adam(net.parameters(), lr=1e-2)
+    opt = torch.optim.Adam(net.parameters(), lr=hparams.lr_finetune)
 
     net.eval()
     with torch.no_grad(): 
