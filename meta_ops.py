@@ -346,14 +346,14 @@ def test_sgd(db, net, device, epoch, log):
         task_num, setsz, c_, h, w = x_spt.size()
 
         for i in range(task_num):
-
-            # The query loss and acc induced by these parameters.
-            qry_logits = net(x_qry[i]).detach()
-            qry_loss = F.cross_entropy(
-                qry_logits, y_qry[i], reduction='none')
-            qry_losses.append(qry_loss.detach())
-            qry_acc =  (qry_logits.argmax(dim=1) == y_qry[i]).detach()
-            qry_accs.append(qry_acc)
+            with torch.no_grad():
+                # The query loss and acc induced by these parameters.
+                qry_logits = net(x_qry[i]).detach()
+                qry_loss = F.cross_entropy(
+                    qry_logits, y_qry[i], reduction='none')
+                qry_losses.append(qry_loss.detach())
+                qry_acc =  (qry_logits.argmax(dim=1) == y_qry[i]).detach()
+                qry_accs.append(qry_acc)
 
     qry_losses = torch.cat(qry_losses).mean().item()
     qry_accs = 100. * torch.cat(qry_accs).float().mean().item()
