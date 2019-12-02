@@ -124,3 +124,9 @@ def loss_eval(i, j, offset,
     finetuned_loss = loss(Y_pred, Y)    
 
     return float(init_loss), float(finetuned_loss), update_magnitude, tuple(projected_vector_update)
+
+
+def plot_images(batch):
+    for im in batch: 
+        pixels = np.reshape(im.cpu().numpy(), (28, 28))
+        plt.imshow(pixels, cmap='gray')

@@ -190,10 +190,14 @@ if hparams.loss_plotting:
     # init dataloader
     dataloader = dl.dataloader(hparams)
 
+
     for i in range(hparams.index):
         test_dataset = dataloader.next(mode='test')
     _, __, X, Y = test_dataset # take only query dataset
     test_dataset = (X, Y)
+
+    plotting_util.plot_images(X[0])
+    pdb.set_trace()
 
     # define loss
     loss = F.cross_entropy
