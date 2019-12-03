@@ -15,6 +15,7 @@ import pdb
 def state_dicts_list_to_numpy_array(state_dicts):
     def flatten(weights_dict):
         flat_weights = [weights_dict[t].reshape(-1) for t in weights_dict  if ("weight" in t or "bias" in t)]
+        print([t for t in weights_dict if ("weight" in t or "bias" in t)])
         flat_weights = [x.cpu().numpy() for x in flat_weights]
         return np.concatenate(flat_weights)
 
@@ -22,7 +23,7 @@ def state_dicts_list_to_numpy_array(state_dicts):
     return result
 
 def numpy_array_to_state_dict(arr, shapes, state_dict_template):
-    assert len(shapes) == len(state_dict_template)
+    assert len(shapes) <= len(state_dict_template)
     n = len(shapes)
     i = 0
     keys = {}
@@ -45,7 +46,7 @@ def numpy_array_to_state_dict(arr, shapes, state_dict_template):
     return result
 
 def get_shapes_indices(weights_dict):
-    shapes = [np.prod(weights_dict[t].shape) for t in weights_dict]
+    shapes = [np.prod(weights_dict[t].shape) for t in weights_dict if ("weight" in t or "bias" in t)]
     # shapes looks like [num_params_in_filter_1, num_params_in_filter_2, ...]
     ind = np.cumsum(shapes)
     result = [(0, ind[0])]
