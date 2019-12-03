@@ -14,11 +14,11 @@ import pdb
 
 def state_dicts_list_to_numpy_array(state_dicts):
     def flatten(weights_dict):
-        flat_weights = [weights_dict[t].reshape(-1) for t in weights_dict]
+        flat_weights = [weights_dict[t].reshape(-1) for t in weights_dict  if ("weight" in t or "bias" in t)]
         flat_weights = [x.cpu().numpy() for x in flat_weights]
         return np.concatenate(flat_weights)
 
-    result = np.vstack([flatten(d) for d in state_dicts])
+    result = np.vstack([flatten(d) for d in state_dicts]) # ignore batch norm params / statistics
     return result
 
 def numpy_array_to_state_dict(arr, shapes, state_dict_template):
@@ -26,11 +26,15 @@ def numpy_array_to_state_dict(arr, shapes, state_dict_template):
     n = len(shapes)
     i = 0
     keys = {}
-    for key in state_dict_template:
-        keys[i] = key
-        i += 1
-
     result = OrderedDict()
+
+    for key in state_dict_template:
+        if ("weight" in key or "bias" in key):
+            keys[i] = key
+            i += 1
+        else:
+            result[key] = state_dict_template[key] # copy BN statistics from template (final weights)
+
     for i in range(n):
         l, r = shapes[i]
         layer_weights = arr[l:r]
@@ -66,18 +70,6 @@ def multiply_filterwise(arr, shapes, multipliers):
     assert len(m) == len(arr)
 
     return arr * m
-
-def project_onto(weights, directions, offset):
-    assert len(weights) == len(directions[0])
-
-    projection_coeffs = []
-
-    for d in directions:
-        v = weights - offset
-        coeff = np.dot(v, d) / np.linalg.norm(d)
-        projection_coeffs.append(coeff)
-
-    return projection_coeffs
 
 def loss_eval(i, j, offset, 
               loss, directions,
@@ -117,7 +109,7 @@ def loss_eval(i, j, offset,
     finetuned_state = copy.deepcopy(net.state_dict())
     finetuned_weights = state_dicts_list_to_numpy_array([finetuned_state])[0]
     update_magnitude = np.sum(get_rescaling_factors(finetuned_weights - weights, shapes)) # sum of Frob. norms of filters/layers
-    projected_vector_update = project_onto(finetuned_weights, directions, offset)
+    projected_vector_update = list(np.dot(finetuned_weights.reshape(1, -1) - weights.reshape(1, -1), directions.T)[0])
 
     with torch.no_grad(): 
         Y_pred = net(X)
@@ -126,7 +118,11 @@ def loss_eval(i, j, offset,
     return float(init_loss), float(finetuned_loss), update_magnitude, tuple(projected_vector_update)
 
 
-def plot_images(batch):
-    for im in batch: 
+def plot_images(batch, labels, dataset):
+    for k, im in enumerate(batch): 
         pixels = np.reshape(im.cpu().numpy(), (28, 28))
         plt.imshow(pixels, cmap='gray')
+        label = str(labels[k].cpu().numpy())
+        plt.title(label)
+        plt.savefig('plots/data/' + dataset + '/' + label + '_' + str(k) + '.png')
+        plt.close()
