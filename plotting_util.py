@@ -14,11 +14,11 @@ import pdb
 
 def state_dicts_list_to_numpy_array(state_dicts):
     def flatten(weights_dict):
-        flat_weights = [weights_dict[t].reshape(-1) for t in weights_dict]
+        flat_weights = [weights_dict[t].reshape(-1) for t in weights_dict  if ("weight" in t or "bias" in t)]
         flat_weights = [x.cpu().numpy() for x in flat_weights]
         return np.concatenate(flat_weights)
 
-    result = np.vstack([flatten(d) for d in state_dicts])
+    result = np.vstack([flatten(d) for d in state_dicts]) # ignore batch norm params / statistics
     return result
 
 def numpy_array_to_state_dict(arr, shapes, state_dict_template):
@@ -26,11 +26,15 @@ def numpy_array_to_state_dict(arr, shapes, state_dict_template):
     n = len(shapes)
     i = 0
     keys = {}
-    for key in state_dict_template:
-        keys[i] = key
-        i += 1
-
     result = OrderedDict()
+
+    for key in state_dict_template:
+        if ("weight" in key or "bias" in key):
+            keys[i] = key
+            i += 1
+        else:
+            result[key] = state_dict_template[key] # copy BN statistics from template (final weights)
+
     for i in range(n):
         l, r = shapes[i]
         layer_weights = arr[l:r]
