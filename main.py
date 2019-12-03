@@ -201,7 +201,7 @@ if hparams.loss_plotting:
     test_dataset = (X, Y)
 
     plotting_util.plot_images(X[0])
-    pdb.set_trace()
+    # pdb.set_trace()
 
     # define loss
     loss = F.cross_entropy
@@ -230,7 +230,7 @@ if hparams.loss_plotting:
     # conversion from dict of tensors to numpy array and back
     to_np_and_back = plotting_util.numpy_array_to_state_dict(plotting_util.state_dicts_list_to_numpy_array([state_dict])[0], weight_shapes, state_dict_template)
     for n in state_dict:
-        assert torch.all(torch.eq(state_dict[n], to_np_and_back[n]))
+        assert torch.all(torch.eq(state_dict[n].cpu(), to_np_and_back[n]))
     # ==================================================
 
 
