@@ -70,10 +70,12 @@ def plot_loss_landscape(directions,
     
 
     min_x, max_x = min(x_traj), max(x_traj)
-    margin_x = (max_x - min_x) * 0.1
+    range_x = max_x - min_x
+    margin_x = range_x * 0.1
 
     min_y, max_y = min(y_traj), max(y_traj)
-    margin_y = (max_y - min_y) * 0.1
+    range_y = max_y - min_y
+    margin_y = range_y * 0.1
 
     grid_x = np.linspace(min_x - margin_x, max_x + margin_x, gridsize)
     grid_y = np.linspace(min_y - margin_y, max_y + margin_y, gridsize)
@@ -105,6 +107,9 @@ def plot_loss_landscape(directions,
                         and {vectors_grid_x[i, j], vectors_grid_y[i, j]}")
 
     ft_loss_grid = np.clip(ft_loss_grid, 0, 20)
+
+    vectors_grid_x /= range_x
+    vectors_grid_y /= range_y
 
     # print("END LOSS IS:")
     # print(loss_eval(0, 0, offset, loss, directions, X, Y, ml, k_query, shapes, state_dict_template))

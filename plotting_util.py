@@ -67,19 +67,6 @@ def multiply_filterwise(arr, shapes, multipliers):
 
     return arr * m
 
-def project_onto(weights, directions, offset):
-    assert len(weights) == len(directions[0])
-
-    projection_coeffs = []
-
-    for d in directions:
-        v = weights - offset
-        coeff = np.dot(v, d) / np.linalg.norm(d)
-        projection_coeffs.append(coeff)
-
-    return projection_coeffs
-
-
 def loss_eval(i, j, offset, 
               loss, directions,
               X, Y,
@@ -118,7 +105,7 @@ def loss_eval(i, j, offset,
     finetuned_state = copy.deepcopy(net.state_dict())
     finetuned_weights = state_dicts_list_to_numpy_array([finetuned_state])[0]
     update_magnitude = np.sum(get_rescaling_factors(finetuned_weights - weights, shapes)) # sum of Frob. norms of filters/layers
-    projected_vector_update = project_onto(finetuned_weights, directions, offset)
+    projected_vector_update = list(np.dot(finetuned_weights.reshape(1, -1) - weights.reshape(1, -1), directions.T)[0])
 
     with torch.no_grad(): 
         Y_pred = net(X)
