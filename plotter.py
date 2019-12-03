@@ -147,7 +147,7 @@ def plot_loss_landscape(directions,
 
     return filename
 
-def plot_progress(log):
+def plot_progress(log, hparams):
     df = pd.DataFrame(log)
 
     fig, ax = plt.subplots(figsize=(6, 4))
@@ -157,12 +157,18 @@ def plot_progress(log):
     ax.plot(test_df['epoch'], test_df['acc'], label='Test')
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Accuracy')
-    ax.set_ylim(70, 100)
+    # ax.set_ylim(70, 100)
     fig.legend(ncol=2, loc='lower right')
     fig.tight_layout()
-    fname = 'maml-accs.png'
-    print(f'--- Plotting accuracy to {fname}')
-    fig.savefig(fname)
+    title = '_'.join([hparams.model, \
+                 hparams.meta_learner, \
+                 hparams.dataset, \
+                 str(hparams.index), \
+                 str(hparams.lr_finetune), \
+                 str(hparams.num_epochs)])
+    ax.set_title(title)
+    print(f'--- Plotting accuracy to {title}')
+    fig.savefig(f"plots/train/{title}.png")
     plt.close(fig)
 
 

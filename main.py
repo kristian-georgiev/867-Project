@@ -151,7 +151,7 @@ if not args.model_training == "pretrained":
             weights_over_time.append(copy.deepcopy(net.state_dict()))
 
         if hparams.plot_progress:
-            plotter.plot_progress(log)
+            plotter.plot_progress(log, hparams)
 
     # serialize model
     np.save(hparams.trajpath, np.array(weights_over_time))
