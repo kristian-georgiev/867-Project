@@ -143,7 +143,7 @@ def plot_loss_landscape(directions,
                          str(hparams.num_epochs)])
     ax.set_title(title)
     filename = title + '.png'
-    plt.savefig(f"{plot_dir}/{filename}")
+    plt.savefig(f"{plot_dir}/{filename}", bbox_inches='tight')
 
     return filename
 
@@ -160,15 +160,11 @@ def plot_progress(log, hparams):
     # ax.set_ylim(70, 100)
     fig.legend(ncol=2, loc='lower right')
     fig.tight_layout()
-    title = '_'.join([hparams.model, \
-                 hparams.meta_learner, \
-                 hparams.dataset, \
-                 str(hparams.index), \
-                 str(hparams.lr_finetune), \
-                 str(hparams.num_epochs)])
+    title = '_'.join([hparams.meta_learner, \
+                 hparams.dataset])
     ax.set_title(title)
     print(f'--- Plotting accuracy to {title}')
-    fig.savefig(f"plots/train/{title}.png")
+    fig.savefig(f"plots/train/{title}.png", bbox_inches='tight')
     plt.close(fig)
 
 

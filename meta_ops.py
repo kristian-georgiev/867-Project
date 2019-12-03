@@ -46,7 +46,7 @@ from support.omniglot_loaders import OmniglotNShot
 
 import pdb
 
-def train_sgd(db, net, device, meta_opt, epoch, log):
+def train_sgd(db, net, device, meta_opt, lr_finetune, epoch, log):
     # call this before starting to train: this enables modules like dropout.
     net.train()
     n_train_iter = db.x_train.shape[0] // db.batchsz
@@ -326,7 +326,7 @@ def test_maml(db, net, device, lr_finetune, epoch, log):
         'time': time.time(),
     })
 
-def test_sgd(db, net, device, epoch, log):
+def test_sgd(db, net, lr_finetune, device, epoch, log):
     print('testing')
     # Crucially in our testing procedure here, we do *not* fine-tune
     # the model during testing for simplicity.
