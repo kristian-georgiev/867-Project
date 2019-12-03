@@ -122,7 +122,7 @@ def train_maml(db, net, device, meta_opt, lr_finetune, epoch, log):
         # Initialize the inner optimizer to adapt the parameters to
         # the support set.
         n_inner_iter = 5
-        inner_opt = torch.optim.Adam(net.parameters(), lr=lr_finetune)
+        inner_opt = torch.optim.SGD(net.parameters(), lr=lr_finetune)
         # thus the inner optimizer will do 5 steps of SGD to get the fast weights
 
         qry_losses = []
