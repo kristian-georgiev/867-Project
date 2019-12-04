@@ -77,6 +77,8 @@ def plot_loss_landscape(directions,
     range_y = max_y - min_y
     margin_y = range_y * 0.1
 
+    print("ranges for plotting", min_x, max_x, min_y, max_y)
+
     grid_x = np.linspace(min_x - margin_x, max_x + margin_x, gridsize)
     grid_y = np.linspace(min_y - margin_y, max_y + margin_y, gridsize)
     
@@ -106,7 +108,7 @@ def plot_loss_landscape(directions,
                     projected directions are {vectors_grid_x[i, j]} \
                         and {vectors_grid_x[i, j], vectors_grid_y[i, j]}")
 
-    ft_loss_grid = np.clip(ft_loss_grid, 0, 20)
+    # ft_loss_grid = np.clip(ft_loss_grid, 0, 20)
 
     vectors_grid_x /= range_x
     vectors_grid_y /= range_y
@@ -141,7 +143,9 @@ def plot_loss_landscape(directions,
                          str(hparams.lr_finetune), \
                          str(hparams.last_n_traj_points), \
                          str(hparams.num_epochs)])
-    ax.set_title(title)
+    # ax.set_title(title)
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
     filename = title + '.png'
     plt.savefig(f"{plot_dir}/{filename}", bbox_inches='tight')
 

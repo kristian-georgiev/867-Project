@@ -71,6 +71,7 @@ argparser.add_argument('--dataset', choices=["omniglot", "quickdraw"])
 argparser.add_argument('--hparams_file', type=str, default="./hparams.yaml")
 argparser.add_argument('--loss_plots_dir', type=str, default="./plots")
 argparser.add_argument('--use_gpu', type=bool, default=True)
+argparser.add_argument('--index', type=int, default=1)
 
 args = argparser.parse_args()
 
@@ -78,6 +79,8 @@ args = argparser.parse_args()
 hparams = Munch(parse(args.hparams_file)[args.model_training])
 if args.meta_learner:
     hparams.meta_learner = args.meta_learner
+
+hparams.index = args.index
 
 
 if args.dataset:
