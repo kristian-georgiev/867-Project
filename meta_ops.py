@@ -179,7 +179,7 @@ def train_maml(db, net, device, meta_opt, lr_finetune, epoch, log):
             'time': time.time(),
         })
 
-def train_anil(db, net, device, meta_opt, epoch, log, freeze):
+def train_anil(db, net, device, meta_opt, lr_finetune, epoch, log):
     """
         freeze: up until which layer we should freeze
     """
@@ -200,22 +200,21 @@ def train_anil(db, net, device, meta_opt, epoch, log, freeze):
         # doesn't have to be duplicated between `train` and `test`?
 
         # Set up the parameters that will be updated with ANIL
-        anil_parameters = []
-        cnt = 0
-        for m in net.modules():
-            if m.__class__.__name__ == 'Sequential': 
-                continue
-            if m.__class__.__name__ == 'Conv2d':
-                if cnt < freeze: 
-                    cnt += 1
-                    continue
-            anil_parameters.append({'params': m.parameters()})
+        # anil_parameters = []
+        # cnt = 0
+        # for m in net.modules():
+        #     if m.__class__.__name__ == 'Sequential': 
+        #         continue
+        #     if m.__class__.__name__ == 'Conv2d':
+        #         if cnt < freeze: 
+        #             cnt += 1
+        #             continue
+        #     anil_parameters.append({'params': m.parameters()})
 
         # Initialize the inner optimizer to adapt the parameters to
         # the support set.
         n_inner_iter = 5
-        inner_opt = torch.optim.SGD(anil_parameters, lr=1e-1)
-
+        inner_opt = torch.optim.SGD(net.parameters(), lr=1e-1)
         # thus the inner optimizer will do 5 steps of SGD to get the fast weights
 
         qry_losses = []
@@ -223,11 +222,15 @@ def train_anil(db, net, device, meta_opt, epoch, log, freeze):
         meta_opt.zero_grad()
         # so task_num is the meta batch
         for i in range(task_num):
+            list_params = [x for x in net.parameters() if x.requires_grad]
+            for i in range(len(list_params) - 2): 
+                list_params[i].requires_grad = False
             # so now we are at task i: we have 32 tasks with 5 sampled classes 
             # (5-way) and 5 examples from each class (5-shot)
             with higher.innerloop_ctx(
                 net, inner_opt, copy_initial_weights=False
             ) as (fnet, diffopt):
+ 
                 # Optimize the likelihood of the support set by taking
                 # gradient steps w.r.t. the model's parameters.
                 # This adapts the model's meta-parameters to the task.
@@ -242,6 +245,11 @@ def train_anil(db, net, device, meta_opt, epoch, log, freeze):
                 # final loss and accuracy on the query dataset.
                 # These will be used to update the model's meta-parameters.
                 
+                # for name, param in net.named_parameters(): 
+                #     print("inner", name, param.requires_grad)
+                # pdb.set_trace()
+                for i in range(len(list_params) - 2): 
+                    list_params[i].requires_grad = True
                 # the query has N_way x K_query examples, in this case 5 x 15 = 75
                 qry_logits = fnet(x_qry[i])
                 qry_loss = F.cross_entropy(qry_logits, y_qry[i])
@@ -254,6 +262,9 @@ def train_anil(db, net, device, meta_opt, epoch, log, freeze):
                 # losses across all of the tasks sampled in this batch.
                 # This unrolls through the gradient steps.
                 qry_loss.backward()
+            # for name, param in net.named_parameters(): 
+            #     print("outer", name, param.requires_grad)
+            # pdb.set_trace()
         meta_opt.step()
 
         qry_losses = sum(qry_losses) / task_num
