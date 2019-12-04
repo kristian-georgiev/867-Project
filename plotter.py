@@ -6,6 +6,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 plt.style.use('bmh')
 from collections import OrderedDict
+from matplotlib.ticker import FormatStrFormatter
 from sklearn.decomposition import PCA
 
 from plotting_util import *
@@ -133,13 +134,15 @@ def plot_loss_landscape(directions,
                     levels=gridsize,
                     cmap=plt.cm.coolwarm)
     cbar = fig.colorbar(C)
+    # cbar.ax.set_yticklabels(["{:4.3f}".format(i) for i in cbar.ax.get_yticks()])
+    # cbar.ax.set_major_formatter(FormatStrFormatter('%.2f'))
     print("Got contour plot!")
     print("LOSS GRID IS:")
     print(ft_loss_grid)
 
     # plots the trajectory
     plt.plot(x_traj, y_traj, c='black', lw='3')
-    plt.scatter(x_traj[-1], y_traj[-1], marker='X', c='white', s=160)
+    plt.scatter(x_traj[-1], y_traj[-1], marker='X', c='gold', s=300)
     
     plt.quiver(gx, gy, vectors_grid_x, vectors_grid_y)
 
@@ -155,20 +158,20 @@ def plot_loss_landscape(directions,
 
     fig, ax = plt.subplots()
     C = ax.contourf(gx, gy, accuracy,
-                    levels=np.linspace(0,1.0,400),
+                    levels=np.linspace(0,1.0,10),
                     cmap=plt.cm.Greens)
     print("Got contour plot!")
     print("ACC GRID IS:")
     print(accuracy)
-    # cbar = fig.colorbar(C)
+    cbar = fig.colorbar(C)
     # plots the trajectory
     plt.plot(x_traj, y_traj, c='black', lw='3')
-    plt.scatter(x_traj[-1], y_traj[-1], marker='X', c='white', s=160)
+    plt.scatter(x_traj[-1], y_traj[-1], marker='X', c='gold', s=300)
     plt.quiver(gx, gy, vectors_grid_x, vectors_grid_y)
     # ax.set_title(title)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
-    plt.savefig(f"{plot_dir}/{title}_acc.png", bbox_inches='tight')
+    plt.savefig(f"{plot_dir}/acc_{title}.png", bbox_inches='tight')
 
 
     return title

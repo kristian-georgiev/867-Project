@@ -89,7 +89,7 @@ def train_sgd(db, net, device, meta_opt, lr_finetune, epoch, log):
         optimizer.step()
 
         qry_losses = sum(qry_losses) / task_num
-        print("accuracies are:", qry_accs)
+        # print("accuracies are:", qry_accs)
         qry_accs = 100. * sum(qry_accs) / task_num
         i = epoch + float(batch_idx) / n_train_iter
         iter_time = time.time() - start_time
@@ -164,7 +164,7 @@ def train_maml(db, net, device, meta_opt, lr_finetune, epoch, log):
         meta_opt.step()
 
         qry_losses = sum(qry_losses) / task_num
-        print("accuracies are:", qry_accs)
+        # print("accuracies are:", qry_accs)
         qry_accs = 100. * sum(qry_accs) / task_num
         i = epoch + float(batch_idx) / n_train_iter
         iter_time = time.time() - start_time
