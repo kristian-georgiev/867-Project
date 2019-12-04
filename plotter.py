@@ -87,6 +87,7 @@ def plot_loss_landscape(directions,
     magn_grid = np.empty((gridsize, gridsize))
     vectors_grid_x = np.empty((gridsize, gridsize))
     vectors_grid_y = np.empty((gridsize, gridsize))
+    accuracy = np.empty((gridsize, gridsize))
     for i in range(gridsize):
         for j in range(gridsize): 
             tup = loss_eval(grid_x[j],
@@ -99,7 +100,7 @@ def plot_loss_landscape(directions,
                             shapes,
                             state_dict_template,
                             hparams)
-            slow_w_loss_grid[i, j], ft_loss_grid[i, j], magn_grid[i, j], v = tup
+            slow_w_loss_grid[i, j], ft_loss_grid[i, j], magn_grid[i, j], v, accuracy[i, j] = tup
             vectors_grid_x[i, j], vectors_grid_y[i, j] = v[0], v[1]
 
             print(f"At {i}, {j}, w\ coords {grid_x[j]}, {grid_y[i]}\
@@ -146,10 +147,29 @@ def plot_loss_landscape(directions,
     # ax.set_title(title)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
-    filename = title + '.png'
-    plt.savefig(f"{plot_dir}/{filename}", bbox_inches='tight')
+    plt.savefig(f"{plot_dir}/{title}.png", bbox_inches='tight')
+    plt.close()
 
-    return filename
+
+    fig, ax = plt.subplots()
+    C = ax.contourf(gx, gy, accuracy,
+                    levels=np.linspace(0,1.0,10),
+                    cmap=plt.cm.coolwarm)
+    print("Got contour plot!")
+    print("ACC GRID IS:")
+    print(accuracy)
+    cbar = fig.colorbar(C)
+    # plots the trajectory
+    plt.plot(x_traj, y_traj, c='black', lw='3')
+    plt.scatter(x_traj[-1], y_traj[-1], marker='X', c='white', s=160)
+    plt.quiver(gx, gy, vectors_grid_x, vectors_grid_y)
+    # ax.set_title(title)
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+    plt.savefig(f"{plot_dir}/{title}_acc.png", bbox_inches='tight')
+
+
+    return title
 
 def plot_progress(log, hparams):
     df = pd.DataFrame(log)

@@ -80,6 +80,7 @@ def loss_eval(i, j, offset,
               state_dict_template,
               hparams):
     assert len(directions) == 2
+    querysz = X.size(0)
     weights = i * directions[0] + j * directions[1] + offset
 
     # go from flat np array to an ordered dict state_dict with
@@ -114,9 +115,10 @@ def loss_eval(i, j, offset,
 
     with torch.no_grad(): 
         Y_pred = net(X)
-    finetuned_loss = loss(Y_pred, Y)    
+    finetuned_loss = loss(Y_pred, Y)
+    accuracy = (Y_pred.argmax(dim=1) == Y).sum().item() / querysz
 
-    return float(init_loss), float(finetuned_loss), update_magnitude, tuple(projected_vector_update)
+    return float(init_loss), float(finetuned_loss), update_magnitude, tuple(projected_vector_update), float(accuracy)
 
 
 def plot_images(batch, labels, dataset):
