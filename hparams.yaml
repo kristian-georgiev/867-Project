@@ -30,4 +30,4 @@ pretrained:
   seed: 121 # random seed
   loss_plotting: true # whether to plot loss landscape
   plot_gridsize: 20 # number of points in plot meshgrid
-  last_n_traj_points: 20
+  last_n_traj_points: 50

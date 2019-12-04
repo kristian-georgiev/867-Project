@@ -200,8 +200,9 @@ if hparams.loss_plotting:
 
     for i in range(hparams.index):
         test_dataset = dataloader.next(mode='test')
-    _, __, X, Y = test_dataset # take only query dataset
+    X_s, Y_s, X, Y = test_dataset 
     test_dataset = (X, Y)
+    support_dataset = (X_s, Y_s)
 
     plotting_util.plot_images(X[0], Y[0], hparams.dataset)
 
@@ -286,6 +287,7 @@ if hparams.loss_plotting:
 
     plot_filename = plotter.plot_loss_landscape(directions,
                                                 test_dataset,
+                                                support_dataset,
                                                 ml,
                                                 loss,
                                                 Ws,

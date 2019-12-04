@@ -89,6 +89,7 @@ def train_sgd(db, net, device, meta_opt, lr_finetune, epoch, log):
         optimizer.step()
 
         qry_losses = sum(qry_losses) / task_num
+        print("accuracies are:", qry_accs)
         qry_accs = 100. * sum(qry_accs) / task_num
         i = epoch + float(batch_idx) / n_train_iter
         iter_time = time.time() - start_time
@@ -163,6 +164,7 @@ def train_maml(db, net, device, meta_opt, lr_finetune, epoch, log):
         meta_opt.step()
 
         qry_losses = sum(qry_losses) / task_num
+        print("accuracies are:", qry_accs)
         qry_accs = 100. * sum(qry_accs) / task_num
         i = epoch + float(batch_idx) / n_train_iter
         iter_time = time.time() - start_time
@@ -255,6 +257,7 @@ def train_anil(db, net, device, meta_opt, epoch, log, freeze):
         meta_opt.step()
 
         qry_losses = sum(qry_losses) / task_num
+        # print("accuracies are:", qry_accs)
         qry_accs = 100. * sum(qry_accs) / task_num
         i = epoch + float(batch_idx) / n_train_iter
         iter_time = time.time() - start_time
@@ -314,6 +317,7 @@ def test_maml(db, net, device, lr_finetune, epoch, log):
                     (qry_logits.argmax(dim=1) == y_qry[i]).detach())
 
     qry_losses = torch.cat(qry_losses).mean().item()
+    # print("accuracies are:", qry_accs)
     qry_accs = 100. * torch.cat(qry_accs).float().mean().item()
     print(
         f'[Epoch {epoch+1:.2f}] Test Loss: {qry_losses:.2f} | Acc: {qry_accs:.2f}'
@@ -356,6 +360,7 @@ def test_sgd(db, net, lr_finetune, device, epoch, log):
                 qry_accs.append(qry_acc)
 
     qry_losses = torch.cat(qry_losses).mean().item()
+    # print("accuracies are:", qry_accs)
     qry_accs = 100. * torch.cat(qry_accs).float().mean().item()
     print(
         f'[Epoch {epoch+1:.5f}] Test Loss: {qry_losses:.5f} | Acc: {qry_accs:.5f}'

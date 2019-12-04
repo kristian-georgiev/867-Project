@@ -21,6 +21,7 @@ def pca_directions(weights_accross_training):
 
 def plot_loss_landscape(directions, 
                         test_dataset, 
+                        support_dataset,
                         ml,
                         loss,
                         weights_over_time, 
@@ -57,6 +58,9 @@ def plot_loss_landscape(directions,
 
     # constructs the test dataset
     X, Y = test_dataset
+    X_s, Y_s = support_dataset
+    X_s = X_s[0]
+    Y_s = Y_s[0]
     print(f"Shape of test data is {X.shape}, and of test labels is {Y.shape}.")
     X = X[0] # TODO update to an average over all test tasks
     Y = Y[0]
@@ -95,6 +99,7 @@ def plot_loss_landscape(directions,
                             offset,
                             loss,
                             directions,
+                            X_s, Y_s,
                             X, Y,
                             ml,
                             shapes,
@@ -140,10 +145,7 @@ def plot_loss_landscape(directions,
 
     title = '_'.join([hparams.meta_learner, \
                          hparams.dataset, \
-                         str(hparams.index), \
-                         str(hparams.lr_finetune), \
-                         str(hparams.last_n_traj_points), \
-                         str(hparams.num_epochs)])
+                         str(hparams.index)])
     # ax.set_title(title)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
@@ -153,12 +155,12 @@ def plot_loss_landscape(directions,
 
     fig, ax = plt.subplots()
     C = ax.contourf(gx, gy, accuracy,
-                    levels=np.linspace(0,1.0,40),
+                    levels=np.linspace(0,1.0,400),
                     cmap=plt.cm.Greens)
     print("Got contour plot!")
     print("ACC GRID IS:")
     print(accuracy)
-    cbar = fig.colorbar(C)
+    # cbar = fig.colorbar(C)
     # plots the trajectory
     plt.plot(x_traj, y_traj, c='black', lw='3')
     plt.scatter(x_traj[-1], y_traj[-1], marker='X', c='white', s=160)

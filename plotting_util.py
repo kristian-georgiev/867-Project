@@ -74,6 +74,7 @@ def multiply_filterwise(arr, shapes, multipliers):
 
 def loss_eval(i, j, offset, 
               loss, directions,
+              X_s, Y_s,
               X, Y,
               ml,
               shapes,
@@ -101,8 +102,8 @@ def loss_eval(i, j, offset,
 
     net.train()
     for i in range(hparams.n_inner_iter):
-        predictions = net(X)
-        ft_loss = F.cross_entropy(predictions, Y)
+        predictions = net(X_s)
+        ft_loss = F.cross_entropy(predictions, Y_s)
         ft_loss.backward()
         opt.step()
 
