@@ -6,7 +6,7 @@ train_new: &DEFAULT
   learning_rate: 1e-3
   lr_finetune: 1e-1
   index: 1
-  num_epochs: 30
+  num_epochs: 50
   n_way: 5
   freeze: 2 # used for anil only, number of layers to freeze
   meta_batch_size: 32 # number of tasks in training batch
@@ -22,7 +22,7 @@ train_new: &DEFAULT
   modelname: modelname.pt
   weightstrajfilename: weights_trajectories.npy # path to numpy array of weight trajectories
   plot_gridsize: 20 # number of points in plot meshgrid
-  last_n_traj_points: 30
+  last_n_traj_points: 50
 
 pretrained:
   <<: *DEFAULT
@@ -30,4 +30,4 @@ pretrained:
   seed: 121 # random seed
   loss_plotting: true # whether to plot loss landscape
   plot_gridsize: 20 # number of points in plot meshgrid
-  last_n_traj_points: 2
+  last_n_traj_points: 20

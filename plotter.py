@@ -153,8 +153,8 @@ def plot_loss_landscape(directions,
 
     fig, ax = plt.subplots()
     C = ax.contourf(gx, gy, accuracy,
-                    levels=np.linspace(0,1.0,10),
-                    cmap=plt.cm.coolwarm)
+                    levels=np.linspace(0,1.0,40),
+                    cmap=plt.cm.Greens)
     print("Got contour plot!")
     print("ACC GRID IS:")
     print(accuracy)
