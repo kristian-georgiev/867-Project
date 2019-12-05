@@ -8,6 +8,7 @@ plt.style.use('bmh')
 from collections import OrderedDict
 from matplotlib.ticker import FormatStrFormatter
 from sklearn.decomposition import PCA
+from mpl_toolkits.mplot3d import Axes3D
 
 from plotting_util import *
 
@@ -155,7 +156,6 @@ def plot_loss_landscape(directions,
     plt.savefig(f"{plot_dir}/{title}.png", bbox_inches='tight')
     plt.close()
 
-
     fig, ax = plt.subplots()
     C = ax.contourf(gx, gy, accuracy,
                     levels=np.linspace(0,1.0,10),
@@ -173,6 +173,68 @@ def plot_loss_landscape(directions,
     ax.get_yaxis().set_visible(False)
     plt.savefig(f"{plot_dir}/acc_{title}.png", bbox_inches='tight')
 
+    ####### plot loss landscape with filter-wise normalized directions ########
+    fig, ax = plt.subplots()
+
+    random_directions = np.random.rand(*directions.shape)
+    random_directions = (random_directions /
+                         np.linalg.norm(random_directions, axis=1).reshape(random_directions.shape[0], 1))
+
+    # TODO
+    min_x, max_x = (-1, 1)
+    min_y, max_y = (-1, 1)
+
+    print("ranges for plotting normalized loss landscape", min_x, max_x, min_y, max_y)
+
+    grid_x = np.linspace(min_x, max_x, gridsize)
+    grid_y = np.linspace(min_y, max_y, gridsize)
+
+    slow_w_loss_grid = np.empty((gridsize, gridsize))
+    ft_loss_grid = np.empty((gridsize, gridsize))
+    magn_grid = np.empty((gridsize, gridsize))
+    vectors_grid_x = np.empty((gridsize, gridsize))
+    vectors_grid_y = np.empty((gridsize, gridsize))
+    accuracy = np.empty((gridsize, gridsize))
+    for i in range(gridsize):
+        for j in range(gridsize):
+            tup = loss_eval(grid_x[j],
+                            grid_y[i],
+                            0,
+                            loss,
+                            random_directions,
+                            X_s, Y_s,
+                            X, Y,
+                            ml,
+                            shapes,
+                            state_dict_template,
+                            hparams)
+            slow_w_loss_grid[i, j], ft_loss_grid[i, j], magn_grid[i, j], v, accuracy[i, j] = tup
+            vectors_grid_x[i, j], vectors_grid_y[i, j] = v[0], v[1]
+
+            print(f"At {i}, {j}, w\ coords {grid_x[j]}, {grid_y[i]}\
+                        the loss from slow weights is {slow_w_loss_grid[i, j]},\
+                            the loss after fine-tuning is {ft_loss_grid[i, j]},\
+                            projected directions are {vectors_grid_x[i, j]} \
+                                and {vectors_grid_x[i, j], vectors_grid_y[i, j]}")
+
+    vectors_grid_x /= range_x
+    vectors_grid_y /= range_y
+
+    gx, gy = np.meshgrid(grid_x, grid_y)
+
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+
+    C = ax.plot_surface(gx, gy, ft_loss_grid, cmap=plt.cm.coolwarm, linewidth=0, antialiased=False, zorder=4)
+    cbar = fig.colorbar(C)
+    print("Got normalized contour plot!")
+    print("normalized LOSS GRID IS:")
+    print(ft_loss_grid)
+
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+    plt.savefig(f"{plot_dir}/loss_landscape_{title}.png", bbox_inches='tight')
+    ###########################################################################
 
     return title
 
