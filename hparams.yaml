@@ -22,13 +22,14 @@ train_new: &DEFAULT
   modelname: modelname.pt
   weightstrajfilename: weights_trajectories.npy # path to numpy array of weight trajectories
   plot_gridsize: 20 # number of points in plot meshgrid
-  last_n_traj_points: 50
+  last_n_traj_points: 20
   fix_extractor: False
+  fix_head: False
 
 pretrained:
   <<: *DEFAULT
-  dataset: quickdraw
+  dataset: omniglot
   seed: 121 # random seed
   loss_plotting: true # whether to plot loss landscape
   plot_gridsize: 20 # number of points in plot meshgrid
-  last_n_traj_points: 50
+  last_n_traj_points: 20

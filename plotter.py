@@ -152,7 +152,13 @@ def plot_loss_landscape(directions,
     # ax.set_title(title)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
-    plt.savefig(f"{plot_dir}/{title}.png", bbox_inches='tight')
+    if hparams.fix_extractor: 
+        addon = "fe_"
+    elif hparams.fix_head: 
+        addon = "fh_"
+    else: 
+        addon = ""
+    plt.savefig(f"{plot_dir}/{addon}{title}.png", bbox_inches='tight')
     plt.close()
 
 
@@ -171,7 +177,13 @@ def plot_loss_landscape(directions,
     # ax.set_title(title)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
-    plt.savefig(f"{plot_dir}/acc_{title}.png", bbox_inches='tight')
+    if hparams.fix_extractor: 
+        addon = "fe_"
+    elif hparams.fix_head: 
+        addon = "fh_"
+    else: 
+        addon = ""
+    plt.savefig(f"{plot_dir}/{addon}acc_{title}.png", bbox_inches='tight')
 
 
     return title
