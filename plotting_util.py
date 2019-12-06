@@ -12,25 +12,32 @@ import copy
 
 import pdb
 
-def state_dicts_list_to_numpy_array(state_dicts):
+def state_dicts_list_to_numpy_array(state_dicts, fix_extractor):
     def flatten(weights_dict):
         flat_weights = [weights_dict[t].reshape(-1) for t in weights_dict  if ("weight" in t or "bias" in t)]
-        print([t for t in weights_dict if ("weight" in t or "bias" in t)])
+        if fix_extractor: 
+            # fixes the extractor, hence it only varies the head
+            flat_weights = flat_weights[-2:]
+        # print([t for t in weights_dict if ("weight" in t or "bias" in t)])
         flat_weights = [x.cpu().numpy() for x in flat_weights]
         return np.concatenate(flat_weights)
 
     result = np.vstack([flatten(d) for d in state_dicts]) # ignore batch norm params / statistics
     return result
 
-def numpy_array_to_state_dict(arr, shapes, state_dict_template):
+def numpy_array_to_state_dict(arr, shapes, state_dict_template, hparams):
     assert len(shapes) <= len(state_dict_template)
     n = len(shapes)
     i = 0
     keys = {}
     result = OrderedDict()
 
-    for key in state_dict_template:
-        if ("weight" in key or "bias" in key):
+    length_dict = len(state_dict_template)
+    for ind, key in enumerate(state_dict_template):
+        condition = ("weight" in key or "bias" in key)
+        if hparams.fix_extractor:
+            condition = (condition and ind >= length_dict - 2)
+        if condition:
             keys[i] = key
             i += 1
         else:
@@ -45,9 +52,14 @@ def numpy_array_to_state_dict(arr, shapes, state_dict_template):
         
     return result
 
-def get_shapes_indices(weights_dict):
+def get_shapes_indices(weights_dict, fix_extractor):
     shapes = [np.prod(weights_dict[t].shape) for t in weights_dict if ("weight" in t or "bias" in t)]
     # shapes looks like [num_params_in_filter_1, num_params_in_filter_2, ...]
+    if fix_extractor:
+        print(shapes)
+        # fixes the extractor, hence it only varies the head
+        shapes = shapes[-2:]
+        print(shapes)
     ind = np.cumsum(shapes)
     result = [(0, ind[0])]
     for i in range(len(ind) - 1):
@@ -88,7 +100,8 @@ def loss_eval(i, j, offset,
     # all the net structure 
     new_state = numpy_array_to_state_dict(weights,
                                           shapes, 
-                                          state_dict_template)
+                                          state_dict_template,
+                                          hparams)
 
 
     net = ml(hparams)
@@ -110,7 +123,7 @@ def loss_eval(i, j, offset,
     net.eval()
 
     finetuned_state = copy.deepcopy(net.state_dict())
-    finetuned_weights = state_dicts_list_to_numpy_array([finetuned_state])[0]
+    finetuned_weights = state_dicts_list_to_numpy_array([finetuned_state], hparams.fix_extractor)[0]
     update_magnitude = np.sum(get_rescaling_factors(finetuned_weights - weights, shapes)) # sum of Frob. norms of filters/layers
     projected_vector_update = list(np.dot(finetuned_weights.reshape(1, -1) - weights.reshape(1, -1), directions.T)[0])
 

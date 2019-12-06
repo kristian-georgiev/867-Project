@@ -73,6 +73,8 @@ argparser.add_argument('--loss_plots_dir', type=str, default="./plots")
 argparser.add_argument('--use_gpu', type=bool, default=True)
 argparser.add_argument('--index', type=int, default=1)
 argparser.add_argument('--n_inner_iter', type=int, default=5)
+argparser.add_argument('--fix_extractor', action='store_true')
+
 args = argparser.parse_args()
 
 # parse hyperparameters
@@ -92,6 +94,7 @@ hparams.modelpath += "/" + hparams.meta_learner + "/" + hparams.dataset + "/" +\
 hparams.trajpath += "/" + hparams.meta_learner + "/" + hparams.dataset + "/" +\
     hparams.model + "/" + hparams.weightstrajfilename
 
+hparams.fix_extractor = args.fix_extractor
 
 print(hparams)
 
@@ -220,39 +223,41 @@ if hparams.loss_plotting:
     # ==================================================
 
 
-    Ws = plotting_util.state_dicts_list_to_numpy_array(weights_over_time)
+    Ws = plotting_util.state_dicts_list_to_numpy_array(weights_over_time, hparams.fix_extractor)
     index_weights_to_take = len(Ws) - hparams.last_n_traj_points - 1
     Ws = Ws[index_weights_to_take:]
 
-    weight_shapes = plotting_util.get_shapes_indices(weights_over_time[0])
+    weight_shapes = plotting_util.get_shapes_indices(weights_over_time[0], hparams.fix_extractor)
     state_dict_template = state_dict
 
 
     # sanity check 
     # ==================================================
     # conversion from dict of tensors to numpy array and back
-    to_np_and_back = plotting_util.numpy_array_to_state_dict(plotting_util.state_dicts_list_to_numpy_array([state_dict])[0], weight_shapes, state_dict_template)
-    for n in state_dict:
-        assert torch.all(torch.eq(state_dict[n].cpu(), to_np_and_back[n].cpu()))
+    if not hparams.fix_extractor:
+        to_np_and_back = plotting_util.numpy_array_to_state_dict(plotting_util.state_dicts_list_to_numpy_array([state_dict], False)[0], weight_shapes, state_dict_template, hparams)
+        for n in state_dict:
+            assert torch.all(torch.eq(state_dict[n].cpu(), to_np_and_back[n].cpu()))
     # ==================================================
 
 
     # sanity check 
     # loss over trajectory
     # ==================================================
-    print("=========================")
-    print(f"weights over time are {Ws[:,0:5]}")
-    print("=========================")
+    if not hparams.fix_extractor:
+        print("=========================")
+        print(f"weights over time are {Ws[:,0:5]}")
+        print("=========================")
 
-    for i in range (len(list(Ws))):
-        w = Ws[i]
-        sd = plotting_util.numpy_array_to_state_dict(w, weight_shapes, state_dict_template)
-        net.load_state_dict(sd)
-        net.eval()
+        for i in range (len(list(Ws))):
+            w = Ws[i]
+            sd = plotting_util.numpy_array_to_state_dict(w, weight_shapes, state_dict_template, hparams)
+            net.load_state_dict(sd)
+            net.eval()
 
-        with torch.no_grad():
-            Y_pred = net(X[0])
-            print(f"loss from trajectory elt {i} is:", loss(Y_pred, Y[0]))
+            with torch.no_grad():
+                Y_pred = net(X[0])
+                print(f"loss from trajectory elt {i} is:", loss(Y_pred, Y[0]))
     # ==================================================
 
 
@@ -260,22 +265,24 @@ if hparams.loss_plotting:
     # sanity check
     # random point
     # ==================================================
-    sh = Ws[0].shape
-    r = np.random.random_sample(sh)
-    sd = plotting_util.numpy_array_to_state_dict(r, weight_shapes, state_dict_template)
-    net.load_state_dict(sd)
-    net.eval()
-    with torch.no_grad():
-        Y_pred = net(X[0])
-        print(f"loss from a random point is {loss(Y_pred, Y[0])}")
+    if not hparams.fix_extractor:
+        sh = Ws[0].shape
+        r = np.random.random_sample(sh)
+        sd = plotting_util.numpy_array_to_state_dict(r, weight_shapes, state_dict_template, hparams)
+        net.load_state_dict(sd)
+        net.eval()
+        with torch.no_grad():
+            Y_pred = net(X[0])
+            print(f"loss from a random point is {loss(Y_pred, Y[0])}")
     # ==================================================
 
 
     # sanity check
     # ==================================================
     # make sure weights from cumulative sum agree with final weights
-    final_weights = plotting_util.state_dicts_list_to_numpy_array([state_dict])
-    assert np.allclose(final_weights[-1], Ws[-1])
+    if not hparams.fix_extractor:
+        final_weights = plotting_util.state_dicts_list_to_numpy_array([state_dict], False)
+        assert np.allclose(final_weights[-1], Ws[-1])
     # ==================================================
 
     # get directions from weights over time

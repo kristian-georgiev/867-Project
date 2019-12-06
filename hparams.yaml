@@ -23,6 +23,7 @@ train_new: &DEFAULT
   weightstrajfilename: weights_trajectories.npy # path to numpy array of weight trajectories
   plot_gridsize: 20 # number of points in plot meshgrid
   last_n_traj_points: 50
+  fix_extractor: False
 
 pretrained:
   <<: *DEFAULT
