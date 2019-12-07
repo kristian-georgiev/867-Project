@@ -148,6 +148,8 @@ def plot_loss_landscape(directions,
 
     title = '_'.join([hparams.meta_learner, \
                          hparams.dataset, \
+                         str(hparams.lr_finetune), \
+                         str(hparams.n_inner_iter), \
                          str(hparams.index)])
     # ax.set_title(title)
     ax.get_xaxis().set_visible(False)

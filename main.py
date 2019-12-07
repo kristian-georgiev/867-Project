@@ -73,6 +73,7 @@ argparser.add_argument('--loss_plots_dir', type=str, default="./plots")
 argparser.add_argument('--use_gpu', type=bool, default=True)
 argparser.add_argument('--index', type=int, default=1)
 argparser.add_argument('--n_inner_iter', type=int, default=5)
+argparser.add_argument('--lr_finetune', type=float, default=1e-1)
 argparser.add_argument('--fix_extractor', action='store_true')
 argparser.add_argument('--fix_head', action='store_true')
 
@@ -84,6 +85,7 @@ if args.meta_learner:
     hparams.meta_learner = args.meta_learner
 
 hparams.index = args.index
+hparams.lr_finetune = args.lr_finetune
 hparams.n_inner_iter = args.n_inner_iter
 
 if args.dataset:
