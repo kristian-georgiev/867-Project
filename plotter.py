@@ -180,6 +180,16 @@ def plot_loss_landscape(directions,
     random_directions = (random_directions /
                          np.linalg.norm(random_directions, axis=1).reshape(random_directions.shape[0], 1))
 
+
+    ########## rescaling ##########
+    dirs_norms = [get_rescaling_factors(d, shapes) for d in random_directions]
+    last_weights_norm = get_rescaling_factors(weights_over_time[-1], shapes)
+    for i in range(len(random_directions)):
+        m = list(np.array(last_weights_norm) / np.array(dirs_norms[i]))
+        random_directions[i] = multiply_filterwise(random_directions[i], shapes, m)
+    print("Rescaled directions!")
+    ###### end of rescaling #######
+
     # TODO
     min_x, max_x = (-1, 1)
     min_y, max_y = (-1, 1)
