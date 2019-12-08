@@ -169,7 +169,7 @@ if not args.model_training == "pretrained":
 else: # args.model_training == "pretrained"
 
     # load model state dictionary
-    state_dict = torch.load(hparams.modelpath)
+    state_dict = torch.load(hparams.modelpath, map_location=torch.device(device))
 
     # init model
     modelloader = models.modelloader(hparams.model)

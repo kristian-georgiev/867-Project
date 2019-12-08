@@ -46,7 +46,16 @@ def numpy_array_to_state_dict(arr, shapes, state_dict_template):
     return result
 
 def get_shapes_indices(weights_dict):
-    shapes = [np.prod(weights_dict[t].shape) for t in weights_dict if ("weight" in t or "bias" in t)]
+    shapes_prelim = [weights_dict[t].shape for t in weights_dict if ("weight" in t or "bias" in t)]
+    shapes = []
+    for shape in shapes_prelim:
+        if len(shape) == 4: # conv2d
+            filter_size = shape[2] * shape[3]
+            num_filters = shape[0] * shape[1]
+            shapes.extend([filter_size] * num_filters)
+        else:
+            shapes.append(np.prod(shape))
+
     # shapes looks like [num_params_in_filter_1, num_params_in_filter_2, ...]
     ind = np.cumsum(shapes)
     result = [(0, ind[0])]
