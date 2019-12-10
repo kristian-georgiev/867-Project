@@ -74,11 +74,11 @@ def plot_loss_landscape(directions,
     y_traj = [elt[1] for elt in trajectory]
     
 
-    min_x, max_x = min(x_traj), max(x_traj)
+    min_x, max_x = -1, 2
     range_x = max_x - min_x
     margin_x = range_x * 0.1
 
-    min_y, max_y = min(y_traj), max(y_traj)
+    min_y, max_y = -1, 2
     range_y = max_y - min_y
     margin_y = range_y * 0.1
 
@@ -144,6 +144,29 @@ def plot_loss_landscape(directions,
     plt.plot(x_traj, y_traj, c='black', lw='3')
     plt.scatter(x_traj[-1], y_traj[-1], marker='X', c='gold', s=300)
     
+
+    c1 = np.cos(2*np.pi/5)
+    c2 = np.cos(np.pi/5)
+    s1 = np.sin(2*np.pi/5)
+    s2 = np.sin(4*np.pi/5)
+
+    theta = np.array([[0, 1], [s1, c1], [s2, -c2], [-s2, -c2], [-s1, c1]]) + np.array([1, 1])
+
+    # plot pentagon
+    train_pentagon = [theta[0] - [0.6, 0.6], theta[2] - [1.75, 0.6], theta[3] - [-0.6, 0.6]]
+    test_pentagon = [theta[1]- [0.18, 0.6], theta[4]- [0.7, 0.6]]
+
+    tr_p_x = [elt[0] for elt in train_pentagon]
+    tr_p_y = [elt[1] for elt in train_pentagon]
+
+    te_p_x = [elt[0] for elt in test_pentagon]
+    te_p_y = [elt[1] for elt in test_pentagon]
+
+    plt.scatter(tr_p_x, tr_p_y, c="green", s=200) # train dots
+    plt.scatter(te_p_x, te_p_y, c="red", s=200) # train dots
+
+
+
     plt.quiver(gx, gy, vectors_grid_x, vectors_grid_y)
 
     title = '_'.join([hparams.meta_learner, \

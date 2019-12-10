@@ -155,7 +155,7 @@ if not args.model_training == "pretrained":
         test_dict['log'] = log
         
         train(**train_dict)
-        test(**test_dict)
+        # test(**test_dict)
 
         if hparams.saving_gradient_steps:
             weights_over_time.append(copy.deepcopy(net.state_dict()))
@@ -207,24 +207,28 @@ if hparams.loss_plotting:
 
     for i in range(hparams.index):
         test_dataset = dataloader.next(mode='test')
-    X_s, Y_s, X, Y = test_dataset 
-    test_dataset = (X, Y)
-    support_dataset = (X_s, Y_s)
+        X_s, Y_s, X, Y = test_dataset 
+        print("SHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPE", X_s.shape)
+        # pdb.set_trace()
+    i = 1
+    test_dataset = (X[i], Y[i])
+    support_dataset = (X_s[i], Y_s[i])
 
-    plotting_util.plot_images(X[0], Y[0], hparams.dataset)
+
+    # plotting_util.plot_images(X[0], Y[0], hparams.dataset)
 
     # define loss
-    loss = F.cross_entropy
+    loss = F.mse_loss
 
-    # sanity check
-    # make sure end loss is small 
-    # ==================================================
-    net.eval()    
-    print([i for i in net.parameters()][0][0][0])
-    with torch.no_grad(): 
-        Y_pred = net(X[0])
-    print("loss from sanity check is:", loss(Y_pred, Y[0]))
-    # ==================================================
+    # # sanity check
+    # # make sure end loss is small 
+    # # ==================================================
+    # net.eval()    
+    # print([i for i in net.parameters()][0][0][0])
+    # with torch.no_grad(): 
+    #     Y_pred = net(X[0].float())
+    # print("loss from sanity check is:", loss(Y_pred, Y[0]))
+    # # ==================================================
 
 
     Ws = plotting_util.state_dicts_list_to_numpy_array(weights_over_time, hparams.fix_extractor, hparams.fix_head)
@@ -247,40 +251,40 @@ if hparams.loss_plotting:
     # ==================================================
 
 
-    # sanity check 
-    # loss over trajectory
-    # ==================================================
-    if ((not hparams.fix_extractor) and (not hparams.fix_head)):
-        print("=========================")
-        print(f"weights over time are {Ws[:,0:5]}")
-        print("=========================")
+    # # sanity check 
+    # # loss over trajectory
+    # # ==================================================
+    # if ((not hparams.fix_extractor) and (not hparams.fix_head)):
+    #     print("=========================")
+    #     print(f"weights over time are {Ws[:,0:5]}")
+    #     print("=========================")
 
-        for i in range (len(list(Ws))):
-            w = Ws[i]
-            sd = plotting_util.numpy_array_to_state_dict(w, weight_shapes, state_dict_template, hparams)
-            net.load_state_dict(sd)
-            net.eval()
+    #     for i in range (len(list(Ws))):
+    #         w = Ws[i]
+    #         sd = plotting_util.numpy_array_to_state_dict(w, weight_shapes, state_dict_template, hparams)
+    #         net.load_state_dict(sd)
+    #         net.eval()
 
-            with torch.no_grad():
-                Y_pred = net(X[0])
-                print(f"loss from trajectory elt {i} is:", loss(Y_pred, Y[0]))
-    # ==================================================
+    #         with torch.no_grad():
+    #             Y_pred = net(X[0])
+    #             print(f"loss from trajectory elt {i} is:", loss(Y_pred, Y[0]))
+    # # ==================================================
 
 
 
-    # sanity check
-    # random point
-    # ==================================================
-    if ((not hparams.fix_extractor) and (not hparams.fix_head)):
-        sh = Ws[0].shape
-        r = np.random.random_sample(sh)
-        sd = plotting_util.numpy_array_to_state_dict(r, weight_shapes, state_dict_template, hparams)
-        net.load_state_dict(sd)
-        net.eval()
-        with torch.no_grad():
-            Y_pred = net(X[0])
-            print(f"loss from a random point is {loss(Y_pred, Y[0])}")
-    # ==================================================
+    # # sanity check
+    # # random point
+    # # ==================================================
+    # if ((not hparams.fix_extractor) and (not hparams.fix_head)):
+    #     sh = Ws[0].shape
+    #     r = np.random.random_sample(sh)
+    #     sd = plotting_util.numpy_array_to_state_dict(r, weight_shapes, state_dict_template, hparams)
+    #     net.load_state_dict(sd)
+    #     net.eval()
+    #     with torch.no_grad():
+    #         Y_pred = net(X[0])
+    #         print(f"loss from a random point is {loss(Y_pred, Y[0])}")
+    # # ==================================================
 
 
     # sanity check
@@ -292,7 +296,10 @@ if hparams.loss_plotting:
     # ==================================================
 
     # get directions from weights over time
-    directions = plotter.pca_directions(Ws)
+    # directions = plotter.pca_directions(Ws)
+    directions = np.array([[1, 0], [0, 1]])
+
+
     print(directions[:, 0:5])
     print(f"Got PCA directions!")
 

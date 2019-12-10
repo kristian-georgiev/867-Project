@@ -56,12 +56,12 @@ def train_sgd(db, net, device, meta_opt, lr_finetune, epoch, log):
         # Sample a batch of support and query images and labels.
         x_spt, y_spt, x_qry, y_qry = db.next()
 
-        task_num, setsz, c_, h, w = x_spt.size()
+        task_num, setsz, c_, h = x_spt.size()
         querysz = x_qry.size(1)
 
         # Initialize the inner optimizer to adapt the parameters to
         # the support set.
-        optimizer = torch.optim.SGD(net.parameters(), lr=1e-1)
+        optimizer = torch.optim.SGD(net.parameters(), lr=0.226)
         # thus the inner optimizer will do 5 steps of SGD to get the fast weights
 
         qry_losses = []
@@ -73,16 +73,16 @@ def train_sgd(db, net, device, meta_opt, lr_finetune, epoch, log):
             # now we are at task i: we have 32 tasks with 5 sampled classes
             # (5-way) and 5 examples from each class (5-shot)
 
-            spt_logits = net(x_spt[i])
-            spt_loss = F.cross_entropy(spt_logits, y_spt[i])
+            spt_logits = net(x_spt[i].float())
+            spt_loss = F.mse_loss(spt_logits, y_spt[i].float())
 
             # the query has N_way x K_query examples, in this case 5 x 15 = 75
-            qry_logits = net(x_qry[i])
-            qry_loss = F.cross_entropy(qry_logits, y_qry[i])
+            qry_logits = net(x_qry[i].float())
+            qry_loss = F.mse_loss(qry_logits, y_qry[i].float())
             qry_losses.append(qry_loss.detach())
-            qry_acc = (qry_logits.argmax(
-                dim=1) == y_qry[i]).sum().item() / querysz
-            qry_accs.append(qry_acc)
+            # qry_acc = (qry_logits.argmax(
+            #     dim=1) == y_qry[i]).sum().item() / querysz
+            qry_accs.append(1)
 
             spt_loss.backward()
 
@@ -122,7 +122,7 @@ def train_maml(db, net, device, meta_opt, lr_finetune, epoch, log):
 
         # Initialize the inner optimizer to adapt the parameters to
         # the support set.
-        n_inner_iter = 5
+        n_inner_iter = 1
         inner_opt = torch.optim.SGD(net.parameters(), lr=lr_finetune)
         # thus the inner optimizer will do 5 steps of SGD to get the fast weights
 
@@ -143,7 +143,7 @@ def train_maml(db, net, device, meta_opt, lr_finetune, epoch, log):
                     print(x_spt[i].shape)
                     spt_logits = fnet(x_spt[i].float())
                     print(spt_logits.shape, y_spt[i].shape)
-                    spt_loss = F.cross_entropy(spt_logits, y_spt[i])
+                    spt_loss = F.mse_loss(spt_logits, y_spt[i].float())
                     diffopt.step(spt_loss)
 
                 # The final set of adapted parameters will induce some
@@ -151,11 +151,12 @@ def train_maml(db, net, device, meta_opt, lr_finetune, epoch, log):
                 # These will be used to update the model's meta-parameters.
                 
                 # the query has N_way x K_query examples, in this case 5 x 15 = 75
-                qry_logits = fnet(x_qry[i])
-                qry_loss = F.cross_entropy(qry_logits, y_qry[i])
+                qry_logits = fnet(x_qry[i].float())
+                qry_loss = F.mse_loss(qry_logits, y_qry[i].float())
                 qry_losses.append(qry_loss.detach())
-                qry_acc = (qry_logits.argmax(
-                    dim=1) == y_qry[i]).sum().item() / querysz
+                # qry_acc = (qry_logits.argmax(
+                #     dim=1) == y_qry[i].float()).sum().item() / querysz
+                qry_acc = 1
                 qry_accs.append(qry_acc)
 
                 # Update the model's meta-parameters to optimize the query
@@ -318,12 +319,12 @@ def test_maml(db, net, device, lr_finetune, epoch, log):
                 # This adapts the model's meta-parameters to the task.
                 for _ in range(n_inner_iter):
                     spt_logits = fnet(x_spt[i])
-                    spt_loss = F.cross_entropy(spt_logits, y_spt[i])
+                    spt_loss = F.mse_loss(spt_logits, y_spt[i])
                     diffopt.step(spt_loss)
 
                 # The query loss and acc induced by these parameters.
                 qry_logits = fnet(x_qry[i]).detach()
-                qry_loss = F.cross_entropy(
+                qry_loss = F.mse_loss(
                     qry_logits, y_qry[i], reduction='none')
                 qry_losses.append(qry_loss.detach())
                 qry_accs.append(

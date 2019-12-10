@@ -45,22 +45,24 @@ class ToyNShot:
 
         y = np.expand_dims(y, axis=3)
 
-        self.x_train = np.array([x[0], x[2], x[3]])
+        self.x_train = np.array([x[0], x[3], x[2]])
+
+        self.x_test = np.array([x[1], x[4]])
 
         self.x_train_sp = torch.from_numpy(np.array([x[0, 0:1, 0:5], 
-                                                     x[2, 0:1, 0:5],
-                                                     x[3, 0:1, 0:5]], 
+                                                     x[3, 0:1, 0:5],
+                                                     x[2, 0:1, 0:5]], 
                                                      dtype=np.double)).double()
         self.x_train_q = torch.from_numpy(np.array([x[0, 0:1, 5:15], 
-                                                    x[2, 0:1, 5:15], 
-                                                    x[3, 0:1, 5:15]], dtype=np.double)).double()
+                                                    x[3, 0:1, 5:15], 
+                                                    x[2, 0:1, 5:15]], dtype=np.double)).double()
 
         self.y_train_sp = torch.from_numpy(np.array([y[0, 0:1, 0:5], 
-                                                     y[2, 0:1, 0:5], 
-                                                     y[3, 0:1, 0:5]], dtype=np.double)).double()
+                                                     y[3, 0:1, 0:5], 
+                                                     y[2, 0:1, 0:5]], dtype=np.double)).double()
         self.y_train_q = torch.from_numpy(np.array([y[0, 0:1, 5:15],
-                                                    y[2, 0:1, 5:15], 
-                                                    y[3, 0:1, 5:15]], dtype=np.double)).double()
+                                                    y[3, 0:1, 5:15], 
+                                                    y[2, 0:1, 5:15]], dtype=np.double)).double()
 
         self.x_test_sp = torch.from_numpy(np.array([x[1, 0:1, 0:5], 
                                                     x[4, 0:1, 0:5]], dtype=np.double)).double()

@@ -17,7 +17,7 @@ def modelloader(modelname):
 # for toy example
 def two(hparams):
         return nn.Sequential(
-            nn.Linear(2, 1), 
+            nn.Linear(2, 1, bias=False), 
             ).to("cpu")
 
 

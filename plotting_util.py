@@ -90,14 +90,14 @@ def multiply_filterwise(arr, shapes, multipliers):
 
 def loss_eval(i, j, offset, 
               loss, directions,
-              X_s_b, Y_s_b,
-              X_b, Y_b,
+              X_s, Y_s,
+              X, Y,
               ml,
               shapes,
               state_dict_template,
               hparams):
     assert len(directions) == 2
-    querysz = X_b[0].size(0)
+    querysz = X[0].size(0)
     weights = i * directions[0] + j * directions[1] + offset
 
     # go from flat np array to an ordered dict state_dict with
@@ -108,48 +108,47 @@ def loss_eval(i, j, offset,
                                           hparams)
 
 
-    init_losses = []
-    finetuned_losses = []
-    finetuned_weights_list = []
-    update_magnitudes = []
-    projected_vector_updates = []
-    accuracies = []
 
-    for X, Y, X_s, Y_s in zip(X_b, Y_b, X_s_b, Y_s_b):
-        net = ml(hparams)
-        net.load_state_dict(new_state)
-        opt = torch.optim.SGD(net.parameters(), lr=hparams.lr_finetune)
+    X = X.float()
+    Y = Y.float()
+    X_s = X_s.float()
+    Y_s = Y_s.float()
+    print("X shaaaaaaaaaaaape", X.shape)
 
-        net.eval()
-        with torch.no_grad(): 
-            Y_pred = net(X)
-        init_losses.append(loss(Y_pred, Y))
+    net = ml(hparams)
+    net.load_state_dict(new_state)
+    opt = torch.optim.SGD(net.parameters(), lr=hparams.lr_finetune)
 
-        net.train()
-        for i in range(hparams.n_inner_iter):
-            predictions = net(X_s)
-            ft_loss = F.cross_entropy(predictions, Y_s)
-            ft_loss.backward()
-            opt.step()
+    net.eval()
+    with torch.no_grad(): 
+        Y_pred = net(X.float())
+    init_loss = loss(Y_pred, Y.float())
 
-        net.eval()
+    net.train()
+    for i in range(hparams.n_inner_iter):
+        predictions = net(X_s)
+        ft_loss = F.mse_loss(predictions, Y_s)
+        ft_loss.backward()
+        opt.step()
 
-        finetuned_state = copy.deepcopy(net.state_dict())
-        finetuned_weights = state_dicts_list_to_numpy_array([finetuned_state], hparams.fix_extractor, hparams.fix_head)[0]
-        finetuned_weights_list.append(finetuned_weights)
-        update_magnitudes.append(np.sum(get_rescaling_factors(finetuned_weights - weights, shapes))) # sum of Frob. norms of filters/layers
-        projected_vector_updates.append(list(np.dot(finetuned_weights.reshape(1, -1) - weights.reshape(1, -1), directions.T)[0]))
+    net.eval()
 
-        with torch.no_grad(): 
-            Y_pred = net(X)
-        finetuned_losses.append(loss(Y_pred, Y))
-        accuracies.append((Y_pred.argmax(dim=1) == Y).sum().item() / querysz)
+    finetuned_state = copy.deepcopy(net.state_dict())
+    finetuned_weights = state_dicts_list_to_numpy_array([finetuned_state], hparams.fix_extractor, hparams.fix_head)[0]
+    finetuned_weights = finetuned_weights
+    update_magnitude = np.sum(get_rescaling_factors(finetuned_weights - weights, shapes)) # sum of Frob. norms of filters/layers
+    projected_vector_update = list(np.dot(finetuned_weights.reshape(1, -1) - weights.reshape(1, -1), directions.T)[0])
 
-    init_loss = np.mean(init_losses)
-    finetuned_loss = np.mean(finetuned_losses)
-    update_magnitude = np.mean(update_magnitudes)
-    projected_vector_update = np.mean(projected_vector_updates, axis=0)
-    accuracy = np.mean(accuracies)
+    with torch.no_grad(): 
+        Y_pred = net(X)
+    finetuned_loss = loss(Y_pred, Y)
+    accuracy = 1
+
+    # init_loss = np.mean(init_losses)
+    # finetuned_loss = np.mean(finetuned_losses)
+    # update_magnitude = np.mean(update_magnitudes)
+    # projected_vector_update = np.mean(projected_vector_updates, axis=0)
+    # accuracy = np.mean(accuracies)
 
     return float(init_loss), float(finetuned_loss), update_magnitude, tuple(projected_vector_update), float(accuracy)
 
