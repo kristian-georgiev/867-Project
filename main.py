@@ -67,7 +67,7 @@ argparser.add_argument('--meta_learner',
                        choices=["maml", "anil", "sgd"],
                        help="Choose meta-learning algorithm to follow.\
                              If sgd is chosen, simply joint training is performed.")
-argparser.add_argument('--dataset', choices=["omniglot", "quickdraw"])
+argparser.add_argument('--dataset', choices=["omniglot", "quickdraw", "toy"])
 argparser.add_argument('--hparams_file', type=str, default="./hparams.yaml")
 argparser.add_argument('--loss_plots_dir', type=str, default="./plots")
 argparser.add_argument('--use_gpu', type=bool, default=True)

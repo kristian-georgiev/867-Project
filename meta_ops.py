@@ -114,7 +114,7 @@ def train_maml(db, net, device, meta_opt, lr_finetune, epoch, log):
         # Sample a batch of support and query images and labels.
         x_spt, y_spt, x_qry, y_qry = db.next()
 
-        task_num, setsz, c_, h, w = x_spt.size()
+        task_num, setsz, c_, h = x_spt.size()
         querysz = x_qry.size(1)
 
         # TODO: Maybe pull this out into a separate module so it
@@ -140,7 +140,9 @@ def train_maml(db, net, device, meta_opt, lr_finetune, epoch, log):
                 # higher is able to automatically keep copies of
                 # your network's parameters as they are being updated.
                 for _ in range(n_inner_iter):
-                    spt_logits = fnet(x_spt[i])
+                    print(x_spt[i].shape)
+                    spt_logits = fnet(x_spt[i].float())
+                    print(spt_logits.shape, y_spt[i].shape)
                     spt_loss = F.cross_entropy(spt_logits, y_spt[i])
                     diffopt.step(spt_loss)
 
