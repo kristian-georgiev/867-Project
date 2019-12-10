@@ -1,15 +1,15 @@
 train_new: &DEFAULT
-  dataset: omniglot # omniglot / miniimagenet / quickdraw
+  dataset: toy # omniglot / quickdraw / toy
   meta_learner: maml # maml / reptile / anil
-  model: small # model architecture, specified in /models/models.py
+  model: two # model architecture, specified in /models/models.py
   optimizer: adam
   learning_rate: 1e-3
   lr_finetune: 1e-1
   index: 1
-  num_epochs: 50
+  num_epochs: 1
   n_way: 5
   freeze: 2 # used for anil only, number of layers to freeze
-  meta_batch_size: 32 # number of tasks in training batch
+  meta_batch_size: 3 # number of tasks in training batch
   k_support: 5 # k shot for support set
   k_query: 15 # k shot for query set
   n_inner_iter: 5 # number of iterations in inner loop
@@ -22,7 +22,7 @@ train_new: &DEFAULT
   modelname: modelname.pt
   weightstrajfilename: weights_trajectories.npy # path to numpy array of weight trajectories
   plot_gridsize: 20 # number of points in plot meshgrid
-  last_n_traj_points: 20
+  last_n_traj_points: 1
   fix_extractor: False
   fix_head: False
 

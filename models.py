@@ -3,7 +3,8 @@ from torch import nn
 import torch.nn.functional as F
 
 def modelloader(modelname):
-    modelloaders = {"mini" : mini,
+    modelloaders = {"two" : two,
+                    "mini" : mini,
                     "mini_no_setup" : mini_no_setup,
                     "small_no_batch_norm" : small_no_batch_norm,
                     "small" : small,
@@ -11,6 +12,13 @@ def modelloader(modelname):
                     "large" : large}
 
     return modelloaders[modelname]
+
+
+# for toy example
+def two():
+        return nn.Sequential(
+            nn.Linear(2, 1), 
+            ).to("cpu")
 
 
 # for cli debugging purposes

@@ -27,3 +27,11 @@ def dataloader(hparams):
                 imgsz=28,
                 device=hparams.device,
                 )
+
+    elif hparams.dataset == "toy":
+        from support.toy_loaders import ToyNShot
+        return ToyNShot(
+                batchsz=hparams.meta_batch_size,
+                k_shot=hparams.k_support,
+                k_query=hparams.k_query,
+                device=hparams.device)
