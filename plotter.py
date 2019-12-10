@@ -60,11 +60,11 @@ def plot_loss_landscape(directions,
     # constructs the test dataset
     X, Y = test_dataset
     X_s, Y_s = support_dataset
-    X_s = X_s[0]
-    Y_s = Y_s[0]
+    # X_s = X_s[0]
+    # Y_s = Y_s[0]
     print(f"Shape of test data is {X.shape}, and of test labels is {Y.shape}.")
-    X = X[0] # TODO update to an average over all test tasks
-    Y = Y[0]
+    # X = X[0] # TODO update to an average over all test tasks
+    # Y = Y[0]
 
     # trajectory = []
 
