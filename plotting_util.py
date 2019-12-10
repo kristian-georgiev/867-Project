@@ -145,8 +145,8 @@ def loss_eval(i, j, offset,
         finetuned_losses.append(loss(Y_pred, Y))
         accuracies.append((Y_pred.argmax(dim=1) == Y).sum().item() / querysz)
 
-    init_loss = np.mean(init_losses)
-    finetuned_loss = np.mean(finetuned_losses)
+    init_loss = np.mean([float(elt) for elt in init_losses])
+    finetuned_loss = np.mean([float(elt) for elt in finetuned_losses])
     update_magnitude = np.mean(update_magnitudes)
     projected_vector_update = np.mean(projected_vector_updates, axis=0)
     accuracy = np.mean(accuracies)
